@@ -9,27 +9,37 @@ repos:
       - id: check-added-large-files
       - id: debug-statements
       - id: detect-private-key
+      - id: double-quote-string-fixer
 
-  # python code formatting
-  - repo: https://github.com/psf/black
-    rev: 22.1.0
+    # python code formatting
+  - repo: https://github.com/pre-commit/mirrors-autopep8
+    rev: "v1.6.0"
     hooks:
-      - id: black
-        args: [--line-length, "99"]
+      - id: autopep8
+        name: autopep8-default
+        args: [--max-line-length, "110", --in-place]
+        exclude: tests/.*
+
+  - repo: https://github.com/pre-commit/mirrors-autopep8
+    rev: v1.4.4
+    hooks:
+      - id: autopep8
+        name: autopep8-unit-tests
+        args: ["-i", "--ignore=E226,E24,W50,W690,E402"]
 
   # python import sorting
   - repo: https://github.com/PyCQA/isort
     rev: 5.10.1
     hooks:
       - id: isort
-        args: ["--profile", "black", "--filter-files"]
+        args: ["--skip-gitignore", "--line-length", "110"]
 
   # python docstring formatting
   - repo: https://github.com/myint/docformatter
     rev: v1.4
     hooks:
       - id: docformatter
-        args: [--in-place, --wrap-summaries, "99", --wrap-descriptions, "92"]
+        args: [--in-place, --wrap-summaries, "100", --wrap-descriptions, "110"]
 
   # yaml formatting
   - repo: https://github.com/pre-commit/mirrors-prettier
