@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 import pytest
 import torch
@@ -31,25 +33,40 @@ def test_man_layer(batch_size, input_shape):
                           (2, [768, 1536]), (4, [768, 1536]), (6, [768, 1536])])
 def test_dmanet(batch_size, input_shape):
 
+    device = torch.device('cpu')
+    if torch.cuda.is_available():
+        device = torch.device('cuda')
+
     input_shape = np.array(input_shape)
-    x = torch.rand(batch_size, 3, *input_shape.tolist())
+    x = torch.rand(batch_size, 3, *input_shape.tolist(), device=device)
     model = net.DMANet(num_classes=19, input_size=input_shape.tolist())
+    model.to(device)
 
+    # Model for training
     model.train()
-
     output, mid_aux, high_aux = model(x)
+
+    # Check training output
     assert output.shape == (batch_size, 19, *input_shape.tolist())
     assert mid_aux.shape == (batch_size, 64, *(input_shape // 16).tolist())
     assert high_aux.shape == (batch_size, 256, *(input_shape // 32).tolist())
 
+    # Model for inference
     model.eval()
-    x = torch.rand(batch_size // 2, 3, *input_shape.tolist())
+    x = torch.rand(batch_size // 2, 3, *input_shape.tolist(), device=device)
     with torch.no_grad():
+        t = time.time()
         output = model(x)
+        infer_t = time.time() - t
 
-        assert output.shape == (batch_size // 2, 19, *input_shape.tolist())
+    # Check inference output
+    assert output.shape == (batch_size // 2, 19, *input_shape.tolist())
+
+    # Check FPS
+    assert 1 / infer_t > 40
 
     summary = torchinfo.summary(model, x.shape, verbose=0, col_names=[
                                 'input_size', 'output_size', 'num_params'])
 
-    assert summary.to_megabytes(summary.total_param_bytes) < 100
+    # Check Paramsize
+    assert summary.total_params < 20e+6
