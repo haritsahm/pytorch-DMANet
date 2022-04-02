@@ -88,7 +88,11 @@ class MultiAggregationNetwork(nn.Module):
         features = self._uplow_cbr(features)
 
         features = F.interpolate(features, size=tuple(self._input_size), mode='bilinear')
-        return features, mid_aux, high_aux
+
+        if self.training:
+            return features, mid_aux, high_aux
+        else:
+            return features
 
 
 class DMANet(nn.Module):
@@ -115,9 +119,6 @@ class DMANet(nn.Module):
         # TODO: Docstring
 
         features = self._encoder(x)
-        output, mid_aux, high_aux = self._decoder(features)
+        mask = self._decoder(features)
 
-        if self.training:
-            return output, mid_aux, high_aux
-        else:
-            return output
+        return mask
