@@ -94,7 +94,7 @@ class CityscapeDataModule(LightningDataModule):
 
         return self._data_test
 
-    def setup(self):
+    def setup(self, stage: Optional[str] = None):
         """Load data.
 
         Set variables: `self._data_train`, `self._data_val`, `self._data_test`.
