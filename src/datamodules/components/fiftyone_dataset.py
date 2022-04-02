@@ -50,7 +50,11 @@ class ImageSegmentationDirectory(Dataset):
         image = cv2.imread(img_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         mask = np.ones(image.shape[:2] + (1,), dtype=np.uint8) * 255
-        mask = cv2.imread(mask_path).astype(np.uint8) if self._stage != 'test' else mask
+        mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE).astype(
+            np.uint8) if self._stage != 'test' else mask
+
+        if mask.ndim == 3:
+            mask = np.squeeze(mask)
 
         if self._transform is not None:
             transformed = self._transform(image=image, mask=mask)
@@ -63,6 +67,8 @@ class ImageSegmentationDirectory(Dataset):
 
         if isinstance(mask, np.ndarray):
             mask = torch.from_numpy(mask)
+
+        mask = mask.to(torch.long)
 
         return image, mask
 
