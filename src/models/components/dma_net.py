@@ -72,22 +72,26 @@ class MultiAggregationNetwork(nn.Module):
             self._high_cbr(c5), F.max_pool2d(c2, kernel_size=7, stride=8))
         gcb_features = self._gcb(c5)
 
-        features = F.interpolate(gcb_features, size=tuple(self._input_size // 32), mode='bilinear')
+        features = F.interpolate(gcb_features, size=tuple(
+            self._input_size // 32), mode='bilinear', align_corners=True)
         features = features + high_features
         features = self._high_ftb(features)
         high_aux = features
 
-        features = F.interpolate(features, size=tuple(self._input_size // 16), mode='bilinear')
+        features = F.interpolate(features, size=tuple(
+            self._input_size // 16), mode='bilinear', align_corners=True)
         features = features + mid_features
         features = self._upmid_cbr(features)
         features = self._mid_ftb(features)
         mid_aux = features
 
-        features = F.interpolate(features, size=tuple(self._input_size // 8), mode='bilinear')
+        features = F.interpolate(features, size=tuple(
+            self._input_size // 8), mode='bilinear', align_corners=True)
         features = features + low_features
         features = self._uplow_cbr(features)
 
-        features = F.interpolate(features, size=tuple(self._input_size), mode='bilinear')
+        features = F.interpolate(features, size=tuple(self._input_size),
+                                 mode='bilinear', align_corners=True)
 
         if self.training:
             return features, mid_aux, high_aux
@@ -107,6 +111,9 @@ class DMANet(nn.Module):
     ):
         super().__init__()
 
+        self._num_classes = num_classes
+        self._input_size = input_size
+
         self._encoder = timm.create_model(
             backbone_type, pretrained=backbone_pretrained,
             features_only=True, out_indices=(1, 2, 3, 4))
@@ -115,10 +122,18 @@ class DMANet(nn.Module):
             channels=self._encoder.feature_info.channels(),
             input_size=input_size)
 
+    @property
+    def num_classes(self):
+        return self._num_classes
+
+    @property
+    def input_size(self):
+        return self._input_size
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # TODO: Docstring
 
-        features = self._encoder(x)
-        mask = self._decoder(features)
+        enc_features = self._encoder(x)
+        dec_masks = self._decoder(enc_features)
 
-        return mask
+        return dec_masks
