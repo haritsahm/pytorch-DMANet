@@ -3,9 +3,6 @@
 neptune:
   _target_: pytorch_lightning.loggers.neptune.NeptuneLogger
   api_key: ${oc.env:NEPTUNE_API_TOKEN} # api key is loaded from environment variable
-  project_name: your_name/template-tests
-  close_after_fit: True
-  offline_mode: False
-  experiment_name: ${name}
-  experiment_id: null
-  prefix: ""
+  project: ${oc.env:NEPTUNE_PROJECT_NAME}
+  log_model_checkpoints: True
+  name: ${name}

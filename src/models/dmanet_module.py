@@ -1,14 +1,21 @@
 from typing import Any, List
 
+import aim
+import neptune.new as neptune
+import numpy as np
 import torch
 import torch.nn.functional as F
 import torchmetrics as tm
+from aim.pytorch_lightning import AimLogger
+from neptune.new.types import File
 from pytorch_lightning import LightningModule
+from pytorch_lightning.loggers import NeptuneLogger
 from torchmetrics import MaxMetric
 from torchmetrics.classification.accuracy import Accuracy
 
 import src.models.functions.scheduler as lr_scheduler
 from src.models.components.dma_net import DMANet
+from src.utils import visualize
 
 
 class DMANetLitModule(LightningModule):
@@ -115,13 +122,31 @@ class DMANetLitModule(LightningModule):
         self._val_metrics(pd_masks, gt_masks)
 
         # TODO: Log random samples
+        if batch_idx % 100 == 0 and torch.rand(1).item() > 0.7:
+            images = images.cpu().numpy()
+            pd_masks = pd_masks.to(torch.uint8).cpu().numpy()
+
+            for idx, (image, target) in enumerate(zip(images, pd_masks)):
+
+                image = (image * 255).astype(np.uint8).transpose((1, 2, 0))
+                colored_mask = visualize.show_prediction(image, target, overlay=0.5)
+
+                for logger in self.loggers:
+                    if isinstance(logger.experiment, neptune.Run):
+                        logger.experiment['val/predictions'].log(File.as_image(colored_mask))
+                    if isinstance(logger.experiment, aim.Run):
+                        log_image = aim.Image(colored_mask, format='jpeg',
+                                              optimize=True, quality=75)
+                        logger.experiment.track(log_image, name='images',
+                                                epoch=self.current_epoch, context={'subset': 'val'})
 
         return {'loss': loss}
 
     def validation_epoch_end(self, outputs: List[Any]):
         val_metrics = self._val_metrics.compute()
         # self.log('val/avg_loss', outputs["loss"], on_step=False, on_epoch=True, prog_bar=False)
-        self.log('val/acc', val_metrics['Accuracy'], on_step=False, on_epoch=True, prog_bar=False)
+        self.log('val/acc', val_metrics['Accuracy'],
+                 on_step=False, on_epoch=True, prog_bar=False)
         self.log('val/mIoU', val_metrics['JaccardIndex'],
                  on_step=False, on_epoch=True, prog_bar=True)
         self.log('val/F1Score', val_metrics['F1Score'],
@@ -133,24 +158,34 @@ class DMANetLitModule(LightningModule):
         # log test metrics
         pd_masks = torch.argmax(logits, dim=1)
 
-        # TODO: Compute segmentation metrics
-        self._test_metrics(pd_masks, gt_masks)
-
         # TODO: Log random samples
+        if batch_idx % 100 == 0 and torch.rand(1).item() > 0.7:
+            images = images.cpu().numpy()
+            pd_masks = pd_masks.to(torch.uint8).cpu().numpy()
+
+            for idx, (image, target) in enumerate(zip(images, pd_masks)):
+
+                image = (image * 255).astype(np.uint8).transpose((1, 2, 0))
+                colored_mask = visualize.show_prediction(image, target, overlay=0.5)
+
+                for logger in self.loggers:
+                    if isinstance(logger.experiment, neptune.Run):
+                        logger.experiment['test/predictions'].log(File.as_image(colored_mask))
+                    if isinstance(logger.experiment, aim.Run):
+                        log_image = aim.Image(colored_mask, format='jpeg',
+                                              optimize=True, quality=75)
+                        logger.experiment.track(log_image, name='images',
+                                                epoch=self.current_epoch, context={'subset': 'test'})
+
+        # TODO: Save output to some standards
 
     def test_epoch_end(self, outputs: List[Any]):
-        test_metrics = self._test_metrics.compute()
-        self.log('test/acc', test_metrics['Accuracy'], on_step=False, on_epoch=True)
-        self.log('test/mIoU', test_metrics['JaccardIndex'],
-                 on_step=False, on_epoch=True)
-        self.log('test/F1Score', test_metrics['F1Score'],
-                 on_step=False, on_epoch=True)
+        pass
 
     def on_epoch_end(self):
         """Reset metrics at the end of every epoch."""
 
         self._val_metrics.reset()
-        self._test_metrics.reset()
 
     def configure_optimizers(self):
         """Choose what optimizers and learning-rate schedulers to use in your optimization. Normally
