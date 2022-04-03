@@ -25,7 +25,7 @@ trainer:
 
 model:
   lr: 0.005
-  alpha_weight: 1.0
+  aux_weight: 1.0
 
 datamodule:
   batch_size: 4

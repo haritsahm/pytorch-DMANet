@@ -2,10 +2,12 @@ from typing import Any, List
 
 import torch
 import torch.nn.functional as F
+import torchmetrics as tm
 from pytorch_lightning import LightningModule
 from torchmetrics import MaxMetric
 from torchmetrics.classification.accuracy import Accuracy
 
+import src.models.functions.scheduler as lr_scheduler
 from src.models.components.dma_net import DMANet
 
 
@@ -26,7 +28,7 @@ class DMANetLitModule(LightningModule):
         self,
         net: torch.nn.Module,
         criterion_type: str = 'cross_entropy',
-        alpha_weight: float = 1.0,
+        aux_weight: float = 1.0,
         lr: float = 0.005,
         weight_decay: float = 0.0005,
     ):
@@ -38,7 +40,7 @@ class DMANetLitModule(LightningModule):
         # it also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False)
 
-        self.net = net
+        self._net = net
 
         # loss function
         # TODO: Implement: Dice
@@ -47,16 +49,23 @@ class DMANetLitModule(LightningModule):
         else:
             raise ValueError(f'Criterion {criterion_type} is not available')
 
-        # use separate metric instance for train, val and test step
-        # to ensure a proper reduction over the epoch
-        # self.val_acc = Accuracy()
-        # self.test_acc = Accuracy()
-
-        # for logging best so far validation accuracy
-        # self.val_acc_best = MaxMetric()
+        self._val_metrics = tm.MetricCollection([
+            tm.Accuracy(num_classes=self._net.num_classes,
+                        average='macro', mdmc_average='samplewise', multiclass=True),
+            tm.JaccardIndex(num_classes=self._net.num_classes),
+            tm.F1Score(num_classes=self._net.num_classes, average='macro',
+                       mdmc_average='samplewise', multiclass=True)
+        ])
+        self._test_metrics = tm.MetricCollection([
+            tm.Accuracy(num_classes=self._net.num_classes,
+                        average='macro', mdmc_average='samplewise', multiclass=True),
+            tm.JaccardIndex(num_classes=self._net.num_classes),
+            tm.F1Score(num_classes=self._net.num_classes, average='macro',
+                       mdmc_average='samplewise', multiclass=True)
+        ])
 
     def forward(self, x: torch.Tensor):
-        return self.net(x)
+        return self._net(x)
 
     def step(self, batch: Any):
         images, gt_masks = batch
@@ -68,17 +77,16 @@ class DMANetLitModule(LightningModule):
 
         pd_masks, mid_aux, high_aux = logits
 
-        mid_aux = F.interpolate(mid_aux, size=tuple(images.shape[2:]), mode='bilinear')
-        high_aux = F.interpolate(high_aux, size=tuple(images.shape[2:]), mode='bilinear')
+        mid_aux = F.interpolate(mid_aux, size=tuple(
+            images.shape[2:]), mode='bilinear', align_corners=True)
+        high_aux = F.interpolate(high_aux, size=tuple(
+            images.shape[2:]), mode='bilinear', align_corners=True)
 
         pri_loss = self._criterion(pd_masks, gt_masks)
         aux_mid_loss = self._criterion(mid_aux, gt_masks)
         aux_high_loss = self._criterion(high_aux, gt_masks)
 
-        print(pri_loss, aux_mid_loss, aux_high_loss,
-              (aux_mid_loss + aux_high_loss), self.hparams.alpha_weight)
-
-        joint_loss = pri_loss + (aux_mid_loss + aux_high_loss) * self.hparams.alpha_weight
+        joint_loss = pri_loss + (aux_mid_loss + aux_high_loss) * self.hparams.aux_weight
         joint_loss.retain_grad()
 
         self.log('train/loss', joint_loss, on_step=False, on_epoch=True, prog_bar=False)
@@ -97,44 +105,52 @@ class DMANetLitModule(LightningModule):
     def validation_step(self, batch: Any, batch_idx: int):
         images, logits, gt_masks = self.step(batch)
 
-        # log val metrics
+        # log val loss
         loss = self._criterion(logits, gt_masks)
 
-        # TODO: Compute segmentation metrics
-        acc = 0.01  # self.val_acc(preds, targets)
+        # log val metrics
+        pd_masks = torch.argmax(logits, dim=1)
 
-        self.log('val/loss', loss, on_step=False, on_epoch=True, prog_bar=False)
-        self.log('val/acc', acc, on_step=False, on_epoch=True, prog_bar=True)
+        # TODO: Compute segmentation metrics
+        self._val_metrics(pd_masks, gt_masks)
 
         # TODO: Log random samples
 
         return {'loss': loss}
 
     def validation_epoch_end(self, outputs: List[Any]):
-        # acc = self.val_acc.compute()  # get val accuracy from current epoch
-        # self.val_acc_best.update(acc)
-        # self.log("val/acc_best", self.val_acc_best.compute(), on_epoch=True, prog_bar=True)
-        pass
+        val_metrics = self._val_metrics.compute()
+        # self.log('val/avg_loss', outputs["loss"], on_step=False, on_epoch=True, prog_bar=False)
+        self.log('val/acc', val_metrics['Accuracy'], on_step=False, on_epoch=True, prog_bar=False)
+        self.log('val/mIoU', val_metrics['JaccardIndex'],
+                 on_step=False, on_epoch=True, prog_bar=True)
+        self.log('val/F1Score', val_metrics['F1Score'],
+                 on_step=False, on_epoch=True, prog_bar=True)
 
     def test_step(self, batch: Any, batch_idx: int):
         images, logits, gt_masks = self.step(batch)
 
         # log test metrics
-        # TODO: Compute segmentation metrics
-        acc = 0.01  # self.test_acc(preds, targets)
+        pd_masks = torch.argmax(logits, dim=1)
 
-        self.log('test/acc', acc, on_step=False, on_epoch=True)
+        # TODO: Compute segmentation metrics
+        self._test_metrics(pd_masks, gt_masks)
 
         # TODO: Log random samples
 
     def test_epoch_end(self, outputs: List[Any]):
-        pass
+        test_metrics = self._test_metrics.compute()
+        self.log('test/acc', test_metrics['Accuracy'], on_step=False, on_epoch=True)
+        self.log('test/mIoU', test_metrics['JaccardIndex'],
+                 on_step=False, on_epoch=True)
+        self.log('test/F1Score', test_metrics['F1Score'],
+                 on_step=False, on_epoch=True)
 
     def on_epoch_end(self):
-        # reset metrics at the end of every epoch
-        # self.test_acc.reset()
-        # self.val_acc.reset()
-        pass
+        """Reset metrics at the end of every epoch."""
+
+        self._val_metrics.reset()
+        self._test_metrics.reset()
 
     def configure_optimizers(self):
         """Choose what optimizers and learning-rate schedulers to use in your optimization. Normally
@@ -147,6 +163,7 @@ class DMANetLitModule(LightningModule):
             params=self.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay
         )
 
-        scheduler = None
+        scheduler = lr_scheduler.WarmupPolyLR(
+            optimizer=optimizer, target_lr=self.hparams.lr, max_iters=self.trainer.estimated_stepping_batches, warmup_iters=1500)
 
-        return {'optimizer': optimizer}
+        return {'optimizer': optimizer, 'lr_scheduler': scheduler}
