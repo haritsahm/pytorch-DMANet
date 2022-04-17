@@ -1,16 +1,18 @@
 import glob
 import os
 import pathlib
-from typing import Optional
+from typing import Optional, Tuple
 
 import albumentations as Albu
 import cv2
 import numpy as np
 import torch
+from pycocotools.coco import COCO
 from torch.utils.data import Dataset
 
 CLASS_NAMES = ['road', 'sidewalk', 'building', 'wall', 'fence', 'pole', 'traffic_light', 'traffic_sign',
-               'vegetation', 'terrain', 'sky', 'person', 'rider', 'car', 'truck', 'bus', 'train', 'motorcycle', 'bicycle']
+               'vegetation', 'terrain', 'sky', 'person', 'rider', 'car', 'truck', 'bus',
+               'train', 'motorcycle', 'bicycle']
 IGNORE_INDEX = 255
 VALID_CLASSES = [7, 8, 11, 12, 13, 17, 19,
                  20, 21, 22, 23, 24, 25, 26, 27, 28, 31, 32, 33]
@@ -41,7 +43,7 @@ class ImageSegmentationDirectory(Dataset):
 
         return len(self._images)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx) -> Tuple[torch.Tensor, torch.LongTensor]:
         # TODO: Docstring
 
         img_path = self._images[idx]
@@ -74,3 +76,53 @@ class ImageSegmentationDirectory(Dataset):
 
     def collate_fn(self, batch):
         pass
+
+
+class COCOSegmentation(Dataset):
+    def __init__(
+        self,
+            dataset_dir: str,
+            stage: str = 'train',
+            transform: Optional[Albu.Compose] = None) -> None:
+        super().__init__()
+        img_dir = os.path.join(dataset_dir, 'data')
+        annotation_path = os.path.join(dataset_dir, 'labels', f'{stage}.json')
+        self._ann = COCO(annotation_path)
+        self._img_data = self._ann.loadImgs(ids=self._ann.getImgIds())
+        self._catIds = self._ann.getCatIds()
+        self._file_paths = [str(pathlib.Path(img_dir) / img['file_name']) for img in self._img_data]
+        self._transform = transform
+        self._img_dir = img_dir
+
+    def __len__(self) -> int:
+        return len(self._file_paths)
+
+    def __getitem__(self, i: int) -> Tuple[torch.Tensor, torch.LongTensor]:
+        ann_ids = self._ann.getAnnIds(
+            imgIds=self._img_data[i]['id'],
+            catIds=self._catIds,
+            iscrowd=None
+        )
+        anns = self._ann.loadAnns(ann_ids)
+
+        image = cv2.imread(self._file_paths[i])
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        mask = np.max(np.stack([self._ann.annToMask(ann) * ann['category_id']
+                                for ann in anns]), axis=0)
+
+        if self._transform is not None:
+            transformed = self._transform(image=image, mask=mask)
+
+            image = transformed['image']
+            mask = transformed['mask']
+
+        if isinstance(image, np.ndarray):
+            image = torch.from_numpy(image)
+
+        if isinstance(mask, np.ndarray):
+            mask = torch.from_numpy(mask)
+
+        mask = mask.to(torch.long)
+
+        return image, mask

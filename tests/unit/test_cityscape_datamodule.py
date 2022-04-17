@@ -13,9 +13,8 @@ from torchvision import transforms
 from src.datamodules.cityscape_datamodule import CityscapeDataModule
 
 
-@pytest.fixture
-def config():
-    return {
+def configs():
+    return [{
         'data_dir': '/media/haritsahm/DataStorage/dataset/cityscapes/cityscape_fo_segmentation',
         'dataloader': 'src.datamodules.components.fiftyone_dataset.ImageSegmentationDirectory',
         'num_classes': 19,
@@ -24,18 +23,27 @@ def config():
         'batch_size': 4,
         'num_workers': 0,
         'pin_memory': False,
-    }
+    },
+        {
+        'data_dir': '/media/haritsahm/DataStorage/dataset/cityscapes/cityscape_fo_coco',
+        'dataloader': 'src.datamodules.components.fiftyone_dataset.COCOSegmentation',
+        'num_classes': 19,
+        'train_transform': None,
+        'test_transform': None,
+        'batch_size': 4,
+        'num_workers': 0,
+        'pin_memory': False,
+    }]
 
 
+@pytest.mark.parametrize('config', configs())
 def test_cityscape_datamodule(config):
+    print(config)
     datamodule = CityscapeDataModule(**config)
 
     assert not datamodule.data_train and not datamodule.data_val and not datamodule.data_test
 
     assert os.path.exists(config['data_dir'])
-    assert os.path.exists(os.path.join(config['data_dir'], 'data'))
-    assert os.path.exists(os.path.join(config['data_dir'], 'labels_train'))
-    assert os.path.exists(os.path.join(config['data_dir'], 'labels_validation'))
 
     datamodule.setup()
 
@@ -58,6 +66,7 @@ def test_cityscape_datamodule(config):
     assert y.dtype == torch.int64
 
 
+@pytest.mark.parametrize('config', configs())
 def test_cityscape_transformations(config):
     # TODO
     # Check with custom transformations
