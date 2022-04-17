@@ -1,7 +1,7 @@
 # --------- pytorch --------- #
-# torch>=1.10.0
-# torchvision>=0.11.0
-pytorch-lightning>=1.5.10
+torch>=1.10.0
+torchvision>=0.11.0
+pytorch-lightning>=1.6.0
 torchmetrics>=0.7.0
 torchinfo       # model analysis
 
@@ -11,8 +11,9 @@ hydra-colorlog>=1.1.0
 hydra-optuna-sweeper>=1.1.0
 
 # --------- loggers --------- #
-# wandb
-# neptune-client
+aim
+wandb
+neptune-client
 # mlflow
 # comet-ml
 # tensorboard
