@@ -55,7 +55,7 @@ def test_cityscape_datamodule(config):
     assert len(x) == config['batch_size']
     assert len(y) == config['batch_size']
     assert x.dtype == torch.float32
-    assert y.dtype == torch.uint8
+    assert y.dtype == torch.int64
 
 
 def test_cityscape_transformations(config):

@@ -19,13 +19,16 @@ name: "dma_net"
 seed: 43
 
 trainer:
+  gpus: 1
   min_epochs: 1
-  max_epochs: 10
+  max_epochs: 100
   gradient_clip_val: 0.5
+  max_steps: 60000
 
 model:
   lr: 0.005
   aux_weight: 1.0
+  warmup_iters: 2500
 
 datamodule:
-  batch_size: 4
+  batch_size: 2

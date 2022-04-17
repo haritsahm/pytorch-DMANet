@@ -38,6 +38,7 @@ class DMANetLitModule(LightningModule):
         aux_weight: float = 1.0,
         lr: float = 0.005,
         weight_decay: float = 0.0005,
+        warmup_iters: int = 2500,
     ):
         super().__init__()
 
@@ -199,6 +200,6 @@ class DMANetLitModule(LightningModule):
         )
 
         scheduler = lr_scheduler.WarmupPolyLR(
-            optimizer=optimizer, target_lr=self.hparams.lr, max_iters=self.trainer.estimated_stepping_batches, warmup_iters=1500)
+            optimizer=optimizer, target_lr=self.hparams.lr, max_iters=self.trainer.estimated_stepping_batches, warmup_iters=self.hparams.warmup_iters)
 
         return {'optimizer': optimizer, 'lr_scheduler': scheduler}

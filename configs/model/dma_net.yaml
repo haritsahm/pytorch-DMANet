@@ -3,6 +3,7 @@ criterion_type: "cross_entropy"
 lr: 0.005
 weight_decay: 0.0005
 aux_weight: 1.0
+warmup_iters: 2500
 net:
   _target_: src.models.components.dma_net.DMANet
   num_classes: 19
