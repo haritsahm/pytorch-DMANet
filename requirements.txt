@@ -1,8 +1,9 @@
 # --------- pytorch --------- #
 torch>=1.10.0
 torchvision>=0.11.0
-pytorch-lightning>=1.5.10
+pytorch-lightning>=1.6.0
 torchmetrics>=0.7.0
+torchinfo       # model analysis
 
 # --------- hydra --------- #
 hydra-core>=1.1.0
@@ -10,15 +11,16 @@ hydra-colorlog>=1.1.0
 hydra-optuna-sweeper>=1.1.0
 
 # --------- loggers --------- #
-# wandb
-# neptune-client
+aim
+wandb
+neptune-client
 # mlflow
 # comet-ml
 # tensorboard
 
 # --------- linters --------- #
 pre-commit      # hooks for applying linters on commit
-black           # code formatting
+autopep8        # code formatting
 isort           # import sorting
 flake8          # code analysis
 nbstripout      # remove output from jupyter notebooks
@@ -29,3 +31,4 @@ rich            # beautiful text formatting in terminal
 pytest          # tests
 sh              # for running bash commands in some tests
 pudb            # debugger
+fiftyone        # dataset

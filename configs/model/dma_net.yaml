@@ -1,0 +1,12 @@
+_target_: src.models.dmanet_module.DMANetLitModule
+criterion_type: "cross_entropy"
+lr: 0.005
+weight_decay: 0.0005
+aux_weight: 1.0
+warmup_iters: 2500
+net:
+  _target_: src.models.components.dma_net.DMANet
+  num_classes: 19
+  input_size: [640, 640]
+  backbone_type: "resnet18"
+  backbone_pretrained: True

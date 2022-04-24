@@ -17,13 +17,13 @@ def get_logger(name=__name__) -> logging.Logger:
     # this ensures all logging levels get marked with the rank zero decorator
     # otherwise logs would get multiplied for each GPU process in multi-GPU setup
     for level in (
-        "debug",
-        "info",
-        "warning",
-        "error",
-        "exception",
-        "fatal",
-        "critical",
+        'debug',
+        'info',
+        'warning',
+        'error',
+        'exception',
+        'fatal',
+        'critical',
     ):
         setattr(logger, level, rank_zero_only(getattr(logger, level)))
 
@@ -42,13 +42,13 @@ def extras(config: DictConfig) -> None:
     """
 
     # disable python warnings if <config.ignore_warnings=True>
-    if config.get("ignore_warnings"):
-        log.info("Disabling python warnings! <config.ignore_warnings=True>")
-        warnings.filterwarnings("ignore")
+    if config.get('ignore_warnings'):
+        log.info('Disabling python warnings! <config.ignore_warnings=True>')
+        warnings.filterwarnings('ignore')
 
     # pretty print config tree using Rich library if <config.print_config=True>
-    if config.get("print_config"):
-        log.info("Printing config tree with Rich! <config.print_config=True>")
+    if config.get('print_config'):
+        log.info('Printing config tree with Rich! <config.print_config=True>')
         print_config(config, resolve=True)
 
 
@@ -56,11 +56,11 @@ def extras(config: DictConfig) -> None:
 def print_config(
     config: DictConfig,
     print_order: Sequence[str] = (
-        "datamodule",
-        "model",
-        "callbacks",
-        "logger",
-        "trainer",
+        'datamodule',
+        'model',
+        'callbacks',
+        'logger',
+        'trainer',
     ),
     resolve: bool = True,
 ) -> None:
@@ -72,8 +72,8 @@ def print_config(
         resolve (bool, optional): Whether to resolve reference fields of DictConfig.
     """
 
-    style = "dim"
-    tree = rich.tree.Tree("CONFIG", style=style, guide_style=style)
+    style = 'dim'
+    tree = rich.tree.Tree('CONFIG', style=style, guide_style=style)
 
     quee = []
 
@@ -93,11 +93,11 @@ def print_config(
         else:
             branch_content = str(config_group)
 
-        branch.add(rich.syntax.Syntax(branch_content, "yaml"))
+        branch.add(rich.syntax.Syntax(branch_content, 'yaml'))
 
     rich.print(tree)
 
-    with open("config_tree.log", "w") as file:
+    with open('config_tree.log', 'w') as file:
         rich.print(tree, file=file)
 
 
@@ -119,27 +119,28 @@ def log_hyperparameters(
     hparams = {}
 
     # choose which parts of hydra config will be saved to loggers
-    hparams["model"] = config["model"]
+    hparams['model'] = config['model']
 
     # save number of model parameters
-    hparams["model/params/total"] = sum(p.numel() for p in model.parameters())
-    hparams["model/params/trainable"] = sum(
+    hparams['model/params/total'] = sum(p.numel() for p in model.parameters())
+    hparams['model/params/trainable'] = sum(
         p.numel() for p in model.parameters() if p.requires_grad
     )
-    hparams["model/params/non_trainable"] = sum(
+    hparams['model/params/non_trainable'] = sum(
         p.numel() for p in model.parameters() if not p.requires_grad
     )
 
-    hparams["datamodule"] = config["datamodule"]
-    hparams["trainer"] = config["trainer"]
+    hparams['datamodule'] = config['datamodule']
+    hparams['trainer'] = config['trainer']
 
-    if "seed" in config:
-        hparams["seed"] = config["seed"]
-    if "callbacks" in config:
-        hparams["callbacks"] = config["callbacks"]
+    if 'seed' in config:
+        hparams['seed'] = config['seed']
+    if 'callbacks' in config:
+        hparams['callbacks'] = config['callbacks']
 
     # send hparams to all loggers
-    trainer.logger.log_hyperparams(hparams)
+    if trainer.logger:
+        trainer.logger.log_hyperparams(hparams)
 
 
 def finish(
