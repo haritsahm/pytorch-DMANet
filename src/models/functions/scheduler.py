@@ -2,11 +2,47 @@ import torch
 
 
 class WarmupPolyLR(torch.optim.lr_scheduler._LRScheduler):
-    # TODO: Docstring
-    # Source: https://github.com/Tramac/awesome-semantic-segmentation-pytorch/blob/master/core/utils/lr_scheduler.py
+    """Plynomial Learning Rate Scheduler with Warmup.
 
-    def __init__(self, optimizer, target_lr=0, max_iters=0, power=0.9, warmup_factor=1.0 / 3,
-                 warmup_iters=500, warmup_method='linear', last_epoch=-1):
+    Apply the polynomial learning rate scheduler with warmup.
+    Source:
+    https://github.com/Tramac/awesome-semantic-segmentation-pytorch/blob/master/core/utils/lr_scheduler.py
+
+    Parameters
+    ----------
+    optimizer : torch.optim
+        torch optimizer module
+    target_lr : int, optional
+        Target learning rate, i.e. the ending learning rate, by default 0
+    max_iters : int, optional
+        Maximum number of iterations to be scheduled, by default 0
+    power : float, optional
+        Power factor, by default 0.9
+    warmup_factor : float, optional
+        Warmup factor, by default 1.0/3
+    warmup_iters : int, optional
+        Number of iterations for warmup, by default 500
+    warmup_method : str, optional
+        Warmup method, by default 'linear'
+    last_epoch : int, optional
+        _description_, by default -1
+
+    Raises
+    ------
+    ValueError
+        If warmup_method not 'constant' or 'linear'
+    """
+
+    def __init__(self,
+                 optimizer: torch.optim,
+                 target_lr: int = 0,
+                 max_iters: int = 0,
+                 power: float = 0.9,
+                 warmup_factor: float = 1.0 / 3,
+                 warmup_iters: int = 500,
+                 warmup_method: str = 'linear',
+                 last_epoch: int = -1):
+
         if warmup_method not in ('constant', 'linear'):
             raise ValueError(
                 "Only 'constant' or 'linear' warmup_method accepted "

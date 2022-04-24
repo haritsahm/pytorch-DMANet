@@ -6,22 +6,18 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 import torchmetrics as tm
-from aim.pytorch_lightning import AimLogger
 from neptune.new.types import File
 from pytorch_lightning import LightningModule
-from pytorch_lightning.loggers import NeptuneLogger
-from torchmetrics import MaxMetric
-from torchmetrics.classification.accuracy import Accuracy
 
 import src.models.functions.scheduler as lr_scheduler
-from src.models.components.dma_net import DMANet
 from src.utils import visualize
 
 
 class DMANetLitModule(LightningModule):
-    """Example of LightningModule for MNIST classification.
+    """LightningModule for DMA Network.
 
-    # TODO: Docstring
+    For full documentation of LightningModule, plese read the docs.
+    Source: https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html
 
     A LightningModule organizes your PyTorch code into 5 sections:
         - Computations (init).
@@ -50,8 +46,7 @@ class DMANetLitModule(LightningModule):
 
         self._net = net
 
-        # loss function
-        # TODO: Implement: Dice
+        # TODO: Implement: Dice loss
         if criterion_type == 'cross_entropy':
             self._criterion = torch.nn.CrossEntropyLoss()
         else:
@@ -100,8 +95,7 @@ class DMANetLitModule(LightningModule):
         self.log('train/loss', joint_loss, on_step=False, on_epoch=True, prog_bar=False)
         self.log('train/pri_loss', pri_loss, on_step=False, on_epoch=True, prog_bar=False)
         self.log('train/aux_mid_loss', aux_mid_loss, on_step=False, on_epoch=True, prog_bar=False)
-        self.log('train/aux_high_loss', aux_high_loss,
-                 on_step=False, on_epoch=True, prog_bar=False)
+        self.log('train/aux_high_loss', aux_high_loss, on_step=False, on_epoch=True, prog_bar=False)
 
         # we can return here dict with any tensors
         return {'loss': joint_loss}
@@ -119,10 +113,8 @@ class DMANetLitModule(LightningModule):
         # log val metrics
         pd_masks = torch.argmax(logits, dim=1)
 
-        # TODO: Compute segmentation metrics
         self._val_metrics(pd_masks, gt_masks)
 
-        # TODO: Log random samples
         if batch_idx % 100 == 0 and torch.rand(1).item() > 0.7:
             images = images.cpu().numpy()
             pd_masks = pd_masks.to(torch.uint8).cpu().numpy()
@@ -136,8 +128,7 @@ class DMANetLitModule(LightningModule):
                     if isinstance(logger.experiment, neptune.Run):
                         logger.experiment['val/predictions'].log(File.as_image(colored_mask))
                     if isinstance(logger.experiment, aim.Run):
-                        log_image = aim.Image(colored_mask, format='jpeg',
-                                              optimize=True, quality=75)
+                        log_image = aim.Image(colored_mask, format='jpeg', optimize=True, quality=75)
                         logger.experiment.track(log_image, name='images',
                                                 epoch=self.current_epoch, context={'subset': 'val'})
 
@@ -146,20 +137,15 @@ class DMANetLitModule(LightningModule):
     def validation_epoch_end(self, outputs: List[Any]):
         val_metrics = self._val_metrics.compute()
         # self.log('val/avg_loss', outputs["loss"], on_step=False, on_epoch=True, prog_bar=False)
-        self.log('val/acc', val_metrics['Accuracy'],
-                 on_step=False, on_epoch=True, prog_bar=False)
-        self.log('val/mIoU', val_metrics['JaccardIndex'],
-                 on_step=False, on_epoch=True, prog_bar=True)
-        self.log('val/F1Score', val_metrics['F1Score'],
-                 on_step=False, on_epoch=True, prog_bar=True)
+        self.log('val/acc', val_metrics['Accuracy'], on_step=False, on_epoch=True, prog_bar=False)
+        self.log('val/mIoU', val_metrics['JaccardIndex'], on_step=False, on_epoch=True, prog_bar=True)
+        self.log('val/F1Score', val_metrics['F1Score'], on_step=False, on_epoch=True, prog_bar=True)
 
     def test_step(self, batch: Any, batch_idx: int):
         images, logits, gt_masks = self.step(batch)
 
-        # log test metrics
         pd_masks = torch.argmax(logits, dim=1)
 
-        # TODO: Log random samples
         if batch_idx % 100 == 0 and torch.rand(1).item() > 0.7:
             images = images.cpu().numpy()
             pd_masks = pd_masks.to(torch.uint8).cpu().numpy()
@@ -173,12 +159,11 @@ class DMANetLitModule(LightningModule):
                     if isinstance(logger.experiment, neptune.Run):
                         logger.experiment['test/predictions'].log(File.as_image(colored_mask))
                     if isinstance(logger.experiment, aim.Run):
-                        log_image = aim.Image(colored_mask, format='jpeg',
-                                              optimize=True, quality=75)
+                        log_image = aim.Image(colored_mask, format='jpeg', optimize=True, quality=75)
                         logger.experiment.track(log_image, name='images',
                                                 epoch=self.current_epoch, context={'subset': 'test'})
 
-        # TODO: Save output to some standards
+        # TODO: Save output to some standards JSON/txt
 
     def test_epoch_end(self, outputs: List[Any]):
         pass
@@ -200,6 +185,7 @@ class DMANetLitModule(LightningModule):
         )
 
         scheduler = lr_scheduler.WarmupPolyLR(
-            optimizer=optimizer, target_lr=self.hparams.lr, max_iters=self.trainer.estimated_stepping_batches, warmup_iters=self.hparams.warmup_iters)
+            optimizer=optimizer, target_lr=self.hparams.lr, max_iters=self.trainer.estimated_stepping_batches,
+            warmup_iters=self.hparams.warmup_iters)
 
         return {'optimizer': optimizer, 'lr_scheduler': scheduler}

@@ -68,9 +68,6 @@ def test_cityscape_datamodule(config):
 
 @pytest.mark.parametrize('config', configs())
 def test_cityscape_transformations(config):
-    # TODO
-    # Check with custom transformations
-    # Check with torchvision transformations
 
     train_transform = Albu.Compose([
         Albu.OneOf([

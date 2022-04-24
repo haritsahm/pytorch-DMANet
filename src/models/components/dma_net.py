@@ -10,7 +10,19 @@ from src.models.functions import layers, weight_init
 
 
 class MultiAggregationNetwork(nn.Module):
-    # TODO: Docstring
+    """Multi Aggregation Netowrk Module.
+
+    Source: https://arxiv.org/pdf/2203.04037.pdf Section III. C
+
+    Parameters
+    ----------
+    num_classes : int
+        Number of output classes.
+    channels : List
+        List of different levels of sub-network feature maps.
+    input_size : List
+        List of network input sizes.
+    """
 
     def __init__(self, num_classes: int, channels: List, input_size: List):
         super().__init__()
@@ -60,8 +72,6 @@ class MultiAggregationNetwork(nn.Module):
                 weight_init.kaiming_init(m)
 
     def forward(self, x: List) -> torch.Tensor:
-        # TODO: Docstring
-
         c2, c3, c4, c5 = x
 
         low_features = self._low_lerb(
@@ -90,8 +100,7 @@ class MultiAggregationNetwork(nn.Module):
         features = features + low_features
         features = self._uplow_cbr(features)
 
-        features = F.interpolate(features, size=tuple(self._input_size),
-                                 mode='bilinear', align_corners=True)
+        features = F.interpolate(features, size=tuple(self._input_size), mode='bilinear', align_corners=True)
 
         if self.training:
             return features, mid_aux, high_aux
@@ -100,7 +109,19 @@ class MultiAggregationNetwork(nn.Module):
 
 
 class DMANet(nn.Module):
-    # TODO: Docstring
+    """DMA-Net Model.
+
+    Parameters
+    ----------
+    num_classes : int, optional
+        Number of output classes, by default 19
+    input_size : List, optional
+        List of network input sizes, by default [640, 640]
+    backbone_type : str, optional
+        Backbone type for timm model constructor, by default 'resnet18'
+    backbone_pretrained : bool, optional
+        Use pretrained model, by default True
+    """
 
     def __init__(
         self,
@@ -131,8 +152,6 @@ class DMANet(nn.Module):
         return self._input_size
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # TODO: Docstring
-
         enc_features = self._encoder(x)
         dec_masks = self._decoder(enc_features)
 

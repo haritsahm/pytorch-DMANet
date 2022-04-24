@@ -21,7 +21,20 @@ CLASS_MAP = dict(zip(VALID_CLASSES, range(19)))
 
 
 class ImageSegmentationDirectory(Dataset):
-    # TODO: Docstring
+    """ImageSegmentation Dataset format reader.
+
+    For full documentation of ImageSegmentation please read the docs.
+    https://voxel51.com/docs/fiftyone/user_guide/export_datasets.html#imagesegmentationdirectory
+
+    Parameters
+    ----------
+    dataset_dir : str
+        Dataset root directory
+    stage : str, optional
+        Dataset stage option, by default 'train'
+    transform : Optional[Albu.Compose], optional
+        Data transformation pipeline, by default None
+    """
 
     def __init__(self, dataset_dir: str, stage: str = 'train', transform: Optional[Albu.Compose] = None):
         dataset_dir = pathlib.Path(dataset_dir)
@@ -39,12 +52,21 @@ class ImageSegmentationDirectory(Dataset):
         self._transform = transform
 
     def __len__(self):
-        # TODO Docstirng
-
         return len(self._images)
 
-    def __getitem__(self, idx) -> Tuple[torch.Tensor, torch.LongTensor]:
-        # TODO: Docstring
+    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.LongTensor]:
+        """Load dataset item.
+
+        Parameters
+        ----------
+        idx : int
+            Data index
+
+        Returns
+        -------
+        Tuple[torch.Tensor, torch.LongTensor]
+            Tuples of image input and target segmentation mask
+        """
 
         img_path = self._images[idx]
         mask_path = self._labels[idx] if self._stage != 'test' else None
@@ -79,6 +101,21 @@ class ImageSegmentationDirectory(Dataset):
 
 
 class COCOSegmentation(Dataset):
+    """COCO Dataset format reader.
+
+    For full documentation of COCO dataset please read the docs.
+    https://voxel51.com/docs/fiftyone/user_guide/export_datasets.html#cocodetectiondataset
+
+    Parameters
+    ----------
+    dataset_dir : str
+        Dataset root directory
+    stage : str, optional
+        Dataset stage option, by default 'train'
+    transform : Optional[Albu.Compose], optional
+        Data transformation pipeline, by default None
+    """
+
     def __init__(
         self,
             dataset_dir: str,
@@ -98,6 +135,19 @@ class COCOSegmentation(Dataset):
         return len(self._file_paths)
 
     def __getitem__(self, i: int) -> Tuple[torch.Tensor, torch.LongTensor]:
+        """Load dataset item.
+
+        Parameters
+        ----------
+        idx : int
+            Data index
+
+        Returns
+        -------
+        Tuple[torch.Tensor, torch.LongTensor]
+            Tuples of image input and target segmentation mask
+        """
+
         ann_ids = self._ann.getAnnIds(
             imgIds=self._img_data[i]['id'],
             catIds=self._catIds,

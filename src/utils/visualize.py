@@ -1,6 +1,7 @@
+# Source: https://github.com/Tramac/awesome-semantic-segmentation-pytorch/blob/master/core/utils/visualize.py
+
 import cv2
 import numpy as np
-from PIL import Image
 
 cityspallete = [
     [128, 64, 128],
@@ -26,7 +27,7 @@ cityspallete = [
 
 
 def set_img_color(img, label, pallete, background=-1, show255=False):
-    # TODO: Dosctring
+    """Apply color to target class in the image."""
 
     for i in range(len(pallete)):
         if i != background:
@@ -38,7 +39,7 @@ def set_img_color(img, label, pallete, background=-1, show255=False):
 
 
 def show_prediction(img, pred, colors: str = 'cityscape', overlay: float = 1.0, background=-1):
-    # TODO: Dosctring
+    """Overlay the output mask with colored class."""
 
     if colors == 'cityscape':
         pallete = cityspallete

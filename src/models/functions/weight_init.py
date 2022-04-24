@@ -5,7 +5,7 @@ import torch.nn as nn
 
 
 def xavier_init(module, gain=1, bias=0, distribution='normal'):
-    # TODO: Docstring
+    """Initialize module weight using Xavier method."""
 
     assert distribution in ['uniform', 'normal']
     if distribution == 'uniform':
@@ -17,7 +17,7 @@ def xavier_init(module, gain=1, bias=0, distribution='normal'):
 
 
 def normal_init(module, mean=0, std=1, bias=0):
-    # TODO: Docstring
+    """Initialize module weight using Normal Distribution method."""
 
     nn.init.normal_(module.weight, mean, std)
     if module.bias is not None:
@@ -25,7 +25,7 @@ def normal_init(module, mean=0, std=1, bias=0):
 
 
 def uniform_init(module, a=0, b=1, bias=0):
-    # TODO: Docstring
+    """Initialize module weight using Uniform Distribution method."""
 
     nn.init.uniform_(module.weight, a, b)
     if module.bias is not None:
@@ -37,7 +37,7 @@ def kaiming_init(module,
                  nonlinearity='relu',
                  bias=0,
                  distribution='normal'):
-    # TODO: Docstring
+    """Initialize module weight using Kaiming method."""
 
     assert distribution in ['uniform', 'normal']
     if distribution == 'uniform':

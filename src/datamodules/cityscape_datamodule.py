@@ -1,9 +1,7 @@
-from typing import Optional, Tuple
+from typing import Optional
 
 import albumentations as Albu
 import hydra
-import omegaconf as oc
-import torch
 from albumentations.pytorch import ToTensorV2
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
@@ -12,7 +10,11 @@ from torch.utils.data import DataLoader, Dataset
 class CityscapeDataModule(LightningDataModule):
     """Cityscape Wrapped in Lightning Datamodule.
 
-    # TODO: Docstring
+    Lightning datamodule for cityscape dataset.
+    The datamodule can be initialized using different dataset formats depending on the users.
+    Albumentation is the default transformation pipeline for easy to use and reconfigurable setups.
+    For full documentation of LightningDataModule, plese read the docs.
+    Source: https://pytorch-lightning.readthedocs.io/en/stable/extensions/datamodules.html
 
     A DataModule implements 5 key methods:
         - prepare_data (things to do on 1 GPU/TPU, not on every GPU/TPU in distributed mode)
@@ -72,30 +74,24 @@ class CityscapeDataModule(LightningDataModule):
 
     @property
     def num_classes(self) -> int:
-        # TODO: Docstring
+        """Get number of classes."""
 
         return self.hparams.num_classes
 
     @property
     def data_train(self):
-        # TODO: Docstring
-
         return self._data_train
 
     @property
     def data_val(self):
-        # TODO: Docstring
-
         return self._data_val
 
     @property
     def data_test(self):
-        # TODO: Docstring
-
         return self._data_test
 
     def setup(self, stage: Optional[str] = None):
-        """Load data.
+        """Initialize and load dataset.
 
         Set variables: `self._data_train`, `self._data_val`, `self._data_test`.
         """
@@ -103,14 +99,17 @@ class CityscapeDataModule(LightningDataModule):
         # load datasets only if they're not loaded already
         if not self._data_train and not self._data_val and not self._data_test:
             self._data_train = hydra.utils.instantiate(
-                self._loader_cls['dataloader'], dataset_dir=self.hparams.data_dir, stage='train', transform=self._train_transform)
+                self._loader_cls['dataloader'], dataset_dir=self.hparams.data_dir,
+                stage='train', transform=self._train_transform)
             self._data_val = hydra.utils.instantiate(
-                self._loader_cls['dataloader'], dataset_dir=self.hparams.data_dir, stage='validation', transform=self._test_transform)
+                self._loader_cls['dataloader'], dataset_dir=self.hparams.data_dir,
+                stage='validation', transform=self._test_transform)
             self._data_test = hydra.utils.instantiate(
-                self._loader_cls['dataloader'], dataset_dir=self.hparams.data_dir, stage='test', transform=self._test_transform)
+                self._loader_cls['dataloader'], dataset_dir=self.hparams.data_dir,
+                stage='test', transform=self._test_transform)
 
     def train_dataloader(self):
-        # TODO: Docstring
+        """Initialize train dataloader."""
 
         return DataLoader(
             dataset=self._data_train,
@@ -121,7 +120,7 @@ class CityscapeDataModule(LightningDataModule):
         )
 
     def val_dataloader(self):
-        # TODO: Docstring
+        """Initialize validation dataloader."""
 
         return DataLoader(
             dataset=self._data_val,
@@ -132,7 +131,7 @@ class CityscapeDataModule(LightningDataModule):
         )
 
     def test_dataloader(self):
-        # TODO: Docstring
+        """Initialize test dataloader."""
 
         return DataLoader(
             dataset=self._data_test,

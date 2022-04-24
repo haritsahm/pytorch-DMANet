@@ -4,7 +4,20 @@ from torch import nn
 
 
 class FeatureTransformationBlock(nn.Module):
-    # TODO: Docstring
+    """Feature Transformation Block Module.
+
+    FTB is comprised of two main sub-branches to perform attention
+    operations along the channel and spatial dimensions.
+    A weight learning sub-branch is used to adaptively learn the
+    weights for the channel sub-branch and the spatial sub-branch
+
+    Source: https://arxiv.org/pdf/2203.04037.pdf Section III. C.2
+
+    Parameters
+    ----------
+    in_channels : int
+        Number of input channels.
+    """
 
     def __init__(self, in_channels: int):
         super().__init__()
@@ -32,8 +45,6 @@ class FeatureTransformationBlock(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # TODO: Docstring
-
         x_f = self._cbr(x)
         x_g = F.adaptive_avg_pool2d(x_f, output_size=(1, 1))
 
@@ -50,7 +61,21 @@ class FeatureTransformationBlock(nn.Module):
 
 
 class LatticeEnhancedBlock(nn.Module):
-    # TODO: Docstring
+    """Lattice Enhanced Residual Block Module.
+
+    Implement the LERB module cosist of a Contextual Module and a Spatial Module.
+    Each module consists of an enhanced sub-module, a spatial Weight Learning Block (WLB),
+    and a Lattice Structure.
+
+    Source: https://arxiv.org/pdf/2203.04037.pdf Section III. C.1
+
+    Parameters
+    ----------
+    x_channels : int
+        Number of input channel from sub branch.
+    m_channels : int
+        Number of input channel form downsampled feature map.
+    """
 
     def __init__(self, x_channels: int, m_channels: int):
         super().__init__()
@@ -82,7 +107,7 @@ class LatticeEnhancedBlock(nn.Module):
         )
 
     def forward_spatial(self, x: torch.Tensor, M: torch.Tensor) -> torch.Tensor:
-        # TODO: Docstring
+        """Compute the spatial sub-module."""
 
         a_s, b_s = [self._sm_wlb(x) for _ in range(2)]
         se_x = self._se_block(torch.cat((x, M), 1))
@@ -93,7 +118,7 @@ class LatticeEnhancedBlock(nn.Module):
         return p + q
 
     def forward_contextual(self, x: torch.Tensor) -> torch.Tensor:
-        # TODO: Docstring
+        """Compute the contextual sub-module."""
 
         a_c, b_c = [self._cm_wlb(x) for _ in range(2)]
         ce_x = self._ce_block(x)
@@ -104,8 +129,6 @@ class LatticeEnhancedBlock(nn.Module):
         return p + q
 
     def forward(self, X: torch.Tensor, M: torch.Tensor) -> torch.Tensor:
-        # TODO: Docstring
-
         f_c = self.forward_contextual(X)
         f_s = self.forward_spatial(f_c, M)
 
@@ -113,9 +136,31 @@ class LatticeEnhancedBlock(nn.Module):
 
 
 class ConvBNReLU(nn.Module):
-    # TODO: Docstring
+    """Convolution-Batchnorm-ReLU Block.
 
-    def __init__(self, in_channels: int, out_channels: int, kernel_size: int = 3, stride: int = 1, padding: int = 1):
+    Generate a standard Conv-Bn-RelU (CBR) layer
+
+    Parameters
+    ----------
+    in_channels : int
+        _description_
+    out_channels : int
+        _description_
+    kernel_size : int, optional
+        _description_, by default 3
+    stride : int, optional
+        _description_, by default 1
+    padding : int, optional
+        _description_, by default 1
+    """
+
+    def __init__(self,
+                 in_channels: int,
+                 out_channels: int,
+                 kernel_size: int = 3,
+                 stride: int = 1,
+                 padding: int = 1):
+
         super(ConvBNReLU, self).__init__()
         self._conv = nn.Conv2d(in_channels=in_channels,
                                out_channels=out_channels,
@@ -127,9 +172,8 @@ class ConvBNReLU(nn.Module):
         self._relu = nn.ReLU(inplace=True)
 
     def forward(self, x):
-        # TODO: Docstring
-
         x = self._conv(x)
         x = self._bn(x)
         x = self._relu(x)
+
         return x
