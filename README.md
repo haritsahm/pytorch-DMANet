@@ -18,7 +18,7 @@ This is an implementation of DMA-Net in Pytorch. The project is for my self expl
 
 ## How to run
 
-Install dependencies
+### Install dependencies
 
 ```bash
 # clone project
@@ -36,31 +36,42 @@ conda activate myenv
 pip install -r requirements.txt
 ```
 
-Train model with default configuration
+### Prepare dataset
+
+Run and follow the [notebook](notebooks/dataset-preparation.ipynb) to prepare and visualize dataset using Fiftyone
+![Fiftyone Sample](docs/fiftyone-sample.png)
+
+
+### Train model with default configuration
 
 ```bash
 # train on CPU
-python train.py trainer.gpus=0
+python train.py trainer.gpus=0 data_dir=data/datasets/cityscapes/cityscape_fo_image-segmentation
 
 # train on GPU
-python train.py trainer.gpus=1
+python train.py trainer.gpus=1 data_dir=data/datasets/cityscapes/cityscape_fo_image-segmentation
 ```
 
 Train model with chosen experiment configuration from [configs/experiment/](configs/experiment/)
 
 ```bash
-python train.py experiment=dma_net.yaml
+python train.py experiment=dma_net.yaml data_dir=data/datasets/cityscapes/cityscape_fo_image-segmentation
 ```
 
 You can override any parameter from command line like this
 
 ```bash
-python train.py trainer.max_epochs=20 datamodule.batch_size=64
+python train.py data_dir=data/datasets/cityscapes/cityscape_fo_image-segmentation trainer.max_epochs=20 datamodule.batch_size=64
 ```
 
 Track experiments with experiment trackers
 ```bash
-python train.py trainer.max_epochs=20 datamodule.batch_size=64 logger=neptune
+python train.py data_dir=data/datasets/cityscapes/cityscape_fo_image-segmentation trainer.max_epochs=20 datamodule.batch_size=64 logger=neptune
 ```
 
 Read the full [documentation](docs/DOCS.md) on how to use pytorch-lightning + hydra
+
+## TODO:
+- [ ] Train model using cloud instances
+- [ ] Validate and compare model metrics (cityscapes and camvid)
+- [ ] Add inference and exporting scripts
