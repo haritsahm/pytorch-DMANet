@@ -1,5 +1,6 @@
 _target_: src.models.dmanet_module.DMANetLitModule
-criterion_type: "cross_entropy"
+criterion_type: "crossentropy"
+ignore_label: 255
 lr: 0.005
 weight_decay: 0.0005
 aux_weight: 1.0

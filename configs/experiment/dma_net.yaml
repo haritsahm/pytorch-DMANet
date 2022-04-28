@@ -29,6 +29,7 @@ model:
   lr: 0.005
   aux_weight: 1.0
   warmup_iters: 2500
+  criterion_type: ohem_crossentropy
 
 datamodule:
   batch_size: 2

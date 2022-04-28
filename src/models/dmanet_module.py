@@ -9,6 +9,7 @@ import torchmetrics as tm
 from neptune.new.types import File
 from pytorch_lightning import LightningModule
 
+import src.models.functions.loss as loss_fn
 import src.models.functions.scheduler as lr_scheduler
 from src.utils import visualize
 
@@ -30,7 +31,8 @@ class DMANetLitModule(LightningModule):
     def __init__(
         self,
         net: torch.nn.Module,
-        criterion_type: str = 'cross_entropy',
+        criterion_type: str = 'crossentropy',
+        ignore_label: int = 255,
         aux_weight: float = 1.0,
         lr: float = 0.005,
         weight_decay: float = 0.0005,
@@ -46,9 +48,10 @@ class DMANetLitModule(LightningModule):
 
         self._net = net
 
-        # TODO: Implement: Dice loss
-        if criterion_type == 'cross_entropy':
-            self._criterion = torch.nn.CrossEntropyLoss()
+        if criterion_type == 'crossentropy':
+            self._criterion = loss_fn.CrossEntropyLoss2d(ignore_label=ignore_label)
+        elif criterion_type == 'ohem_crossentropy':
+            self._criterion = loss_fn.OhemCrossEntropy2dTensor(ignore_label=ignore_label, use_weight=False)
         else:
             raise ValueError(f'Criterion {criterion_type} is not available')
 
