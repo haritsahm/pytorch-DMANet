@@ -1,6 +1,7 @@
 from typing import Optional, Tuple
 
 import albumentations as Albu
+import cv2
 import hub
 import numpy as np
 import torch
@@ -26,6 +27,7 @@ class HubSegmentationDataset(Dataset):
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.LongTensor]:
         image = self._ds.images[idx].numpy()
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         mask = self._ds.segmentations[idx].numpy(fetch_chunks=True).astype(np.uint8)
 
         if self._transform is not None:
