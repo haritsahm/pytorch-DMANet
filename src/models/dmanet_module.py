@@ -141,15 +141,15 @@ class DMANetLitModule(LightningModule):
         val_metrics = self._val_metrics.compute()
         # self.log('val/avg_loss', outputs["loss"], on_step=False, on_epoch=True, prog_bar=False)
         self.log('val/acc', val_metrics['Accuracy'], on_step=False, on_epoch=True, prog_bar=False)
-        self.log('val/mIoU', val_metrics['JaccardIndex'], on_step=False, on_epoch=True, prog_bar=True)
-        self.log('val/F1Score', val_metrics['F1Score'], on_step=False, on_epoch=True, prog_bar=True)
+        self.log('val/mean_IoU', val_metrics['JaccardIndex'], on_step=False, on_epoch=True, prog_bar=True)
+        self.log('val/f1_Score', val_metrics['F1Score'], on_step=False, on_epoch=True, prog_bar=True)
 
     def test_step(self, batch: Any, batch_idx: int):
         images, logits, gt_masks = self.step(batch)
 
         pd_masks = torch.argmax(logits, dim=1)
 
-        if batch_idx % 100 == 0 and torch.rand(1).item() > 0.7:
+        if batch_idx % 100 == 0:
             images = images.cpu().numpy()
             pd_masks = pd_masks.to(torch.uint8).cpu().numpy()
 

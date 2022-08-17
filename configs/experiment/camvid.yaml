@@ -1,0 +1,42 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - override /datamodule: cityscape.yaml
+  - override /model: dma_net.yaml
+  - override /callbacks: default.yaml
+  - override /logger: null
+  - override /trainer: default.yaml
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+# name of the run determines folder name in logs
+name: "camvid_exp"
+
+seed: 43
+
+data_dir: hub://haritsahm/camvid_train
+
+trainer:
+  gpus: 1
+  min_epochs: 1
+  max_epochs: 100
+  gradient_clip_val: 0.5
+  max_steps: 60000
+
+model:
+  lr: 0.005
+  aux_weight: 1.0
+  warmup_iters: 2500
+  criterion_type: ohem_crossentropy
+  net:
+    _target_: src.models.components.dma_net.DMANet
+    num_classes: 32
+
+datamodule:
+  dataloader: src.datamodules.components.hub_dataset.HubSegmentationDataset
+  num_classes: 32
+  batch_size: 2

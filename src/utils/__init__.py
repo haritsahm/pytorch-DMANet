@@ -159,3 +159,7 @@ def finish(
             import wandb
 
             wandb.finish()
+
+        if isinstance(lg, pl.loggers.NeptuneLogger):
+            lg.experiment['checkpoints/best_model'].upload(trainer.checkpoint_callback.best_model_path)
+            lg.experiment['checkpoints/best_model_path'].log(trainer.checkpoint_callback.best_model_path)

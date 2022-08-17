@@ -47,8 +47,10 @@ class CityscapeDataModule(LightningDataModule):
 
         # data transformations
         self._train_transform: Albu.Compose = Albu.Compose([
-            Albu.RandomCrop(width=640, height=640),
             Albu.HorizontalFlip(p=0.5),
+            Albu.RandomScale((-0.5, 1.0), interpolation=2),
+            Albu.SmallestMaxSize(max_size=720, interpolation=2),
+            Albu.RandomCrop(width=640, height=640),
             Albu.RandomBrightnessContrast(p=0.2),
             Albu.Normalize(mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
             ToTensorV2(),
