@@ -159,7 +159,8 @@ class ConvBNReLU(nn.Module):
                  out_channels: int,
                  kernel_size: int = 3,
                  stride: int = 1,
-                 padding: int = 1):
+                 padding: int = 1,
+                 use_activation=True):
 
         super(ConvBNReLU, self).__init__()
         self._conv = nn.Conv2d(in_channels=in_channels,
@@ -169,11 +170,14 @@ class ConvBNReLU(nn.Module):
                                padding=padding,
                                bias=False)
         self._bn = nn.BatchNorm2d(out_channels)
-        self._relu = nn.ReLU(inplace=True)
+        self._use_activation = use_activation
+        if use_activation:
+            self._relu = nn.ReLU(inplace=True)
 
     def forward(self, x):
         x = self._conv(x)
         x = self._bn(x)
-        x = self._relu(x)
+        if self._use_activation:
+            x = self._relu(x)
 
         return x

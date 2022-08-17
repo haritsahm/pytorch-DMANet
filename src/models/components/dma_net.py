@@ -65,7 +65,7 @@ class MultiAggregationNetwork(nn.Module):
         self._upmid_cbr = layers.ConvBNReLU(
             in_channels=mid, out_channels=low // 2)
         self._uplow_cbr = layers.ConvBNReLU(
-            in_channels=low // 2, out_channels=num_classes)
+            in_channels=low // 2, out_channels=num_classes, use_activation=False)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):

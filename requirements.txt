@@ -1,7 +1,7 @@
 # --------- pytorch --------- #
-torch>=1.10.0
-torchvision>=0.11.0
-pytorch-lightning>=1.6.0
+torch==1.12.0
+torchvision==0.13.0
+pytorch-lightning==1.7.1
 torchmetrics>=0.7.0
 torchinfo       # model analysis
 
@@ -31,4 +31,8 @@ rich            # beautiful text formatting in terminal
 pytest          # tests
 sh              # for running bash commands in some tests
 pudb            # debugger
-fiftyone        # dataset
+fiftyone        # dataset format and visualizer
+hub             # dataset format and visualizer
+albumentations  # data augmentations
+timm            # torch image models
+opencv-python-headless==4.5.5
