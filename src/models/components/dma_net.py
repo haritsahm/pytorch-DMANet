@@ -52,10 +52,7 @@ class MultiAggregationNetwork(nn.Module):
         )
 
         # GCB Layer
-        self._gcb = nn.Sequential(
-            nn.AdaptiveAvgPool2d(output_size=(1, 1)),
-            layers.ConvBNReLU(in_channels=high, out_channels=high // 2),
-        )
+        self._gcb_conv = layers.ConvBNReLU(high, 128)
 
         # FTB layers
         self._high_ftb = layers.FeatureTransformationBlock(in_channels=128)
@@ -80,7 +77,9 @@ class MultiAggregationNetwork(nn.Module):
             self._mid_cbr(c4), F.max_pool2d(c2, kernel_size=3, stride=4))
         high_features = self._high_lerb(
             self._high_cbr(c5), F.max_pool2d(c2, kernel_size=7, stride=8))
-        gcb_features = self._gcb(c5)
+
+        gcb_features = torch.mean(c5, dim=(2, 3), keepdim=True)
+        gcb_features = self._gcb_conv(gcb_features)
 
         features = F.interpolate(gcb_features, size=tuple(
             self._input_size // 32), mode='bilinear', align_corners=True)
