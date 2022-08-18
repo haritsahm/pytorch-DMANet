@@ -35,4 +35,4 @@ fiftyone        # dataset format and visualizer
 hub             # dataset format and visualizer
 albumentations  # data augmentations
 timm            # torch image models
-opencv-python-headless==4.5.5
+opencv-python-headless==4.5.5.64
