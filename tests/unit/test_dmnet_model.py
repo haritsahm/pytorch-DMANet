@@ -24,13 +24,13 @@ def test_man_layer(batch_size, input_shape):
     features, mid_aux, high_aux = layer([c2, c3, c4, c5])
 
     assert features.shape == (batch_size, 19, *(input_shape * 4))
-    assert mid_aux.shape == (batch_size, 64, *(input_shape // 4))
-    assert high_aux.shape == (batch_size, 256, *(input_shape // 8))
+    assert mid_aux.shape == (batch_size, 128, *(input_shape // 4))
+    assert high_aux.shape == (batch_size, 128, *(input_shape // 8))
 
 
 @pytest.mark.parametrize('batch_size,input_shape',
                          [(2, [640, 640]), (4, [640, 640]), (6, [640, 640]),
-                          (2, [768, 1536]), (4, [768, 1536]), (6, [768, 1536])])
+                          (2, [768, 1536]), (4, [768, 1536])])
 def test_dmanet(batch_size, input_shape):
 
     device = torch.device('cpu')
@@ -48,8 +48,8 @@ def test_dmanet(batch_size, input_shape):
 
     # Check training output
     assert output.shape == (batch_size, 19, *input_shape.tolist())
-    assert mid_aux.shape == (batch_size, 64, *(input_shape // 16).tolist())
-    assert high_aux.shape == (batch_size, 256, *(input_shape // 32).tolist())
+    assert mid_aux.shape == (batch_size, 128, *(input_shape // 16).tolist())
+    assert high_aux.shape == (batch_size, 128, *(input_shape // 32).tolist())
 
     # Model for inference
     model.eval()
@@ -69,4 +69,4 @@ def test_dmanet(batch_size, input_shape):
                                 'input_size', 'output_size', 'num_params'])
 
     # Check Paramsize
-    assert summary.total_params < 20e+6
+    assert summary.total_params < 15e+6

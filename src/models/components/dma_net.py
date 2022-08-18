@@ -31,24 +31,24 @@ class MultiAggregationNetwork(nn.Module):
         self._input_size = np.array(input_size)
 
         # LERB layers
-        self._low_lerb = layers.LatticeEnhancedBlock(x_channels=low // 4, m_channels=base)
-        self._mid_lerb = layers.LatticeEnhancedBlock(x_channels=mid // 2, m_channels=base)
-        self._high_lerb = layers.LatticeEnhancedBlock(x_channels=high // 4, m_channels=base)
+        self._low_lerb = layers.LatticeEnhancedBlock(x_channels=64, m_channels=base)
+        self._mid_lerb = layers.LatticeEnhancedBlock(x_channels=64, m_channels=base)
+        self._high_lerb = layers.LatticeEnhancedBlock(x_channels=64, m_channels=base)
 
         # Downsampling CBR layers
         self._low_cbr = nn.Sequential(
             layers.ConvBNReLU(in_channels=low, out_channels=low // 2),
-            layers.ConvBNReLU(in_channels=low // 2, out_channels=low // 4),
+            layers.ConvBNReLU(in_channels=low // 2, out_channels=64),
         )
 
         self._mid_cbr = nn.Sequential(
             layers.ConvBNReLU(in_channels=mid, out_channels=mid // 2),
-            layers.ConvBNReLU(in_channels=mid // 2, out_channels=mid // 2),
+            layers.ConvBNReLU(in_channels=mid // 2, out_channels=64),
         )
 
         self._high_cbr = nn.Sequential(
             layers.ConvBNReLU(in_channels=high, out_channels=high // 2),
-            layers.ConvBNReLU(in_channels=high // 2, out_channels=high // 4),
+            layers.ConvBNReLU(in_channels=high // 2, out_channels=64),
         )
 
         # GCB Layer
@@ -58,14 +58,14 @@ class MultiAggregationNetwork(nn.Module):
         )
 
         # FTB layers
-        self._high_ftb = layers.FeatureTransformationBlock(in_channels=high // 2)
-        self._mid_ftb = layers.FeatureTransformationBlock(in_channels=low // 2)
+        self._high_ftb = layers.FeatureTransformationBlock(in_channels=128)
+        self._mid_ftb = layers.FeatureTransformationBlock(in_channels=128)
 
         # Upsampling CBR
         self._upmid_cbr = layers.ConvBNReLU(
-            in_channels=mid, out_channels=low // 2)
+            in_channels=128, out_channels=128)
         self._uplow_cbr = layers.ConvBNReLU(
-            in_channels=low // 2, out_channels=num_classes, use_activation=False)
+            in_channels=128, out_channels=num_classes, use_activation=False)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
