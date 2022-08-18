@@ -30,6 +30,9 @@ model:
   aux_weight: 1.0
   warmup_iters: 2500
   criterion_type: ohem_crossentropy
+  net:
+    num_classes: 19
 
 datamodule:
-  batch_size: 2
+  num_classes: ${model.net.num_classes}
+  batch_size: 16

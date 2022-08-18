@@ -28,7 +28,7 @@ trainer:
   max_steps: 60000
 
 model:
-  lr: 0.005
+  lr: 0.001
   aux_weight: 1.0
   warmup_iters: 2500
   criterion_type: ohem_crossentropy
@@ -38,5 +38,5 @@ model:
 
 datamodule:
   dataloader: src.datamodules.components.hub_dataset.HubSegmentationDataset
-  num_classes: 32
-  batch_size: 2
+  num_classes: ${model.net.num_classes}
+  batch_size: 4

@@ -31,41 +31,38 @@ class MultiAggregationNetwork(nn.Module):
         self._input_size = np.array(input_size)
 
         # LERB layers
-        self._low_lerb = layers.LatticeEnhancedBlock(x_channels=low // 4, m_channels=base)
-        self._mid_lerb = layers.LatticeEnhancedBlock(x_channels=mid // 2, m_channels=base)
-        self._high_lerb = layers.LatticeEnhancedBlock(x_channels=high // 4, m_channels=base)
+        self._low_lerb = layers.LatticeEnhancedBlock(x_channels=64, m_channels=base)
+        self._mid_lerb = layers.LatticeEnhancedBlock(x_channels=64, m_channels=base)
+        self._high_lerb = layers.LatticeEnhancedBlock(x_channels=64, m_channels=base)
 
         # Downsampling CBR layers
         self._low_cbr = nn.Sequential(
             layers.ConvBNReLU(in_channels=low, out_channels=low // 2),
-            layers.ConvBNReLU(in_channels=low // 2, out_channels=low // 4),
+            layers.ConvBNReLU(in_channels=low // 2, out_channels=64),
         )
 
         self._mid_cbr = nn.Sequential(
             layers.ConvBNReLU(in_channels=mid, out_channels=mid // 2),
-            layers.ConvBNReLU(in_channels=mid // 2, out_channels=mid // 2),
+            layers.ConvBNReLU(in_channels=mid // 2, out_channels=64),
         )
 
         self._high_cbr = nn.Sequential(
             layers.ConvBNReLU(in_channels=high, out_channels=high // 2),
-            layers.ConvBNReLU(in_channels=high // 2, out_channels=high // 4),
+            layers.ConvBNReLU(in_channels=high // 2, out_channels=64),
         )
 
         # GCB Layer
-        self._gcb = nn.Sequential(
-            nn.AdaptiveAvgPool2d(output_size=(1, 1)),
-            layers.ConvBNReLU(in_channels=high, out_channels=high // 2),
-        )
+        self._gcb_conv = layers.ConvBNReLU(high, 128)
 
         # FTB layers
-        self._high_ftb = layers.FeatureTransformationBlock(in_channels=high // 2)
-        self._mid_ftb = layers.FeatureTransformationBlock(in_channels=low // 2)
+        self._high_ftb = layers.FeatureTransformationBlock(in_channels=128)
+        self._mid_ftb = layers.FeatureTransformationBlock(in_channels=128)
 
         # Upsampling CBR
         self._upmid_cbr = layers.ConvBNReLU(
-            in_channels=mid, out_channels=low // 2)
+            in_channels=128, out_channels=128)
         self._uplow_cbr = layers.ConvBNReLU(
-            in_channels=low // 2, out_channels=num_classes, use_activation=False)
+            in_channels=128, out_channels=num_classes, use_activation=False)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -80,7 +77,9 @@ class MultiAggregationNetwork(nn.Module):
             self._mid_cbr(c4), F.max_pool2d(c2, kernel_size=3, stride=4))
         high_features = self._high_lerb(
             self._high_cbr(c5), F.max_pool2d(c2, kernel_size=7, stride=8))
-        gcb_features = self._gcb(c5)
+
+        gcb_features = torch.mean(c5, dim=(2, 3), keepdim=True)
+        gcb_features = self._gcb_conv(gcb_features)
 
         features = F.interpolate(gcb_features, size=tuple(
             self._input_size // 32), mode='bilinear', align_corners=True)
