@@ -36,3 +36,4 @@ model:
 datamodule:
   num_classes: ${model.net.num_classes}
   batch_size: 16
+  image_size: [768, 1536]

@@ -40,3 +40,4 @@ datamodule:
   dataloader: src.datamodules.components.hub_dataset.HubSegmentationDataset
   num_classes: ${model.net.num_classes}
   batch_size: 4
+  image_size: [640, 640]
