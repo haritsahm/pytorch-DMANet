@@ -55,20 +55,20 @@ class DMANetLitModule(LightningModule):
         else:
             raise ValueError(f'Criterion {criterion_type} is not available')
 
-        self._val_metrics = tm.MetricCollection([
-            tm.Accuracy(num_classes=self._net.num_classes,
-                        average='macro', mdmc_average='samplewise', multiclass=True),
-            tm.JaccardIndex(num_classes=self._net.num_classes),
-            tm.F1Score(num_classes=self._net.num_classes, average='macro',
-                       mdmc_average='samplewise', multiclass=True)
-        ])
-        self._test_metrics = tm.MetricCollection([
-            tm.Accuracy(num_classes=self._net.num_classes,
-                        average='macro', mdmc_average='samplewise', multiclass=True),
-            tm.JaccardIndex(num_classes=self._net.num_classes),
-            tm.F1Score(num_classes=self._net.num_classes, average='macro',
-                       mdmc_average='samplewise', multiclass=True)
-        ])
+        self._val_metrics = tm.MetricCollection({
+            'Accuracy': tm.Accuracy(task='multiclass', num_classes=self._net.num_classes,
+                                    average='macro', multidim_average='global'),
+            'JaccardIndex': tm.JaccardIndex(task='multiclass', num_classes=self._net.num_classes),
+            'F1Score': tm.F1Score(task='multiclass', num_classes=self._net.num_classes,
+                                  average='macro', multidim_average='global')
+        })
+        self._test_metrics = tm.MetricCollection({
+            'Accuracy': tm.Accuracy(task='multiclass', num_classes=self._net.num_classes,
+                                    average='macro', multidim_average='global'),
+            'JaccardIndex': tm.JaccardIndex(task='multiclass', num_classes=self._net.num_classes),
+            'F1Score': tm.F1Score(task='multiclass', num_classes=self._net.num_classes,
+                                  average='macro', multidim_average='global')
+        })
 
     def forward(self, x: torch.Tensor):
         return self._net(x)
