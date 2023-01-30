@@ -22,7 +22,7 @@ class FeatureTransformationBlock(nn.Module):
     def __init__(self, in_channels: int):
         super().__init__()
 
-        self._cbr = ConvBNReLU(in_channels=in_channels, out_channels=in_channels)
+        self._cbr = ConvBNReLU(in_channels=in_channels, out_channels=in_channels, padding='same')
 
         # Weight learning sub-branch
         self._wlb = nn.Sequential(
