@@ -60,7 +60,7 @@ class DMANetDataModule(LightningDataModule):
         ])
 
         self._test_transform: Albu.Compose = Albu.Compose([
-            Albu.Resize(width=im_height, height=im_height),
+            Albu.Resize(width=im_width, height=im_height),
             Albu.Normalize(mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
             ToTensorV2(),
         ])
