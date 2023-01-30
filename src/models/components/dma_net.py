@@ -1,4 +1,4 @@
-from typing import List
+from typing import Iterable, List
 
 import numpy as np
 import timm
@@ -18,10 +18,10 @@ class MultiAggregationNetwork(nn.Module):
     ----------
     num_classes : int
         Number of output classes.
-    channels : List
-        List of different levels of sub-network feature maps.
-    input_size : List
-        List of network input sizes.
+    backbone_channels : Tuple
+        Tuple of different levels of sub-network feature maps.
+    input_size : Tuple
+        Tuple of network input sizes.
     """
 
     def __init__(self,
@@ -76,7 +76,7 @@ class MultiAggregationNetwork(nn.Module):
             if isinstance(m, nn.Conv2d):
                 weight_init.kaiming_init(m)
 
-    def forward(self, x: List) -> torch.Tensor:
+    def forward(self, x: Iterable) -> torch.Tensor:
         c2, c3, c4, c5 = x
 
         low_features = self._low_lerb(

@@ -1,3 +1,5 @@
+from typing import Union
+
 import torch
 import torch.nn.functional as F
 from torch import nn
@@ -143,15 +145,15 @@ class ConvBNReLU(nn.Module):
     Parameters
     ----------
     in_channels : int
-        _description_
+        Number of input channels
     out_channels : int
-        _description_
+        Number of output channels
     kernel_size : int, optional
-        _description_, by default 3
+        Kernel size, by default 3
     stride : int, optional
-        _description_, by default 1
-    padding : int, optional
-        _description_, by default 1
+        Stride size, by default 1
+    padding : Union[int, str], optional
+        Padding size, by default 1
     """
 
     def __init__(self,
@@ -159,7 +161,7 @@ class ConvBNReLU(nn.Module):
                  out_channels: int,
                  kernel_size: int = 3,
                  stride: int = 1,
-                 padding: int = 1,
+                 padding: Union[int, str] = 1,
                  use_activation=True):
 
         super(ConvBNReLU, self).__init__()
