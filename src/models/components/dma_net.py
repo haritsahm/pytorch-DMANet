@@ -45,22 +45,22 @@ class MultiAggregationNetwork(nn.Module):
 
         # Downsampling CBR layers
         self._low_cbr = nn.Sequential(
-            layers.ConvBNReLU(in_channels=low, out_channels=low // 2, padding='same'),
-            layers.ConvBNReLU(in_channels=low // 2, out_channels=inter_low, padding='same'),
+            layers.ConvBNReLU(in_channels=low, out_channels=low // 2),
+            layers.ConvBNReLU(in_channels=low // 2, out_channels=inter_low),
         )
 
         self._mid_cbr = nn.Sequential(
-            layers.ConvBNReLU(in_channels=mid, out_channels=mid // 2, padding='same'),
-            layers.ConvBNReLU(in_channels=mid // 2, out_channels=inter_high, padding='same'),
+            layers.ConvBNReLU(in_channels=mid, out_channels=mid // 2),
+            layers.ConvBNReLU(in_channels=mid // 2, out_channels=inter_high),
         )
 
         self._high_cbr = nn.Sequential(
-            layers.ConvBNReLU(in_channels=high, out_channels=high // 2, padding='same'),
-            layers.ConvBNReLU(in_channels=high // 2, out_channels=inter_high, padding='same'),
+            layers.ConvBNReLU(in_channels=high, out_channels=high // 2),
+            layers.ConvBNReLU(in_channels=high // 2, out_channels=inter_high),
         )
 
         # GCB Layer
-        self._gcb_conv = layers.ConvBNReLU(high, 2*inter_high, padding='same')
+        self._gcb_conv = layers.ConvBNReLU(high, 2*inter_high)
 
         # FTB layers
         self._high_ftb = layers.FeatureTransformationBlock(in_channels=2*inter_high)
@@ -68,9 +68,9 @@ class MultiAggregationNetwork(nn.Module):
 
         # Upsampling CBR
         self._upmid_cbr = layers.ConvBNReLU(
-            in_channels=2*inter_high, out_channels=2*inter_low, padding='same')
+            in_channels=2*inter_high, out_channels=2*inter_low)
         self._uplow_cbr = layers.ConvBNReLU(
-            in_channels=2*inter_low, out_channels=num_classes, use_activation=False, padding='same')
+            in_channels=2*inter_low, out_channels=num_classes, use_activation=False)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
