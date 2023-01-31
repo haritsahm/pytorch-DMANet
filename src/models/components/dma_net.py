@@ -18,8 +18,12 @@ class MultiAggregationNetwork(nn.Module):
     ----------
     num_classes : int
         Number of output classes.
-    backbone_channels : Tuple
+    backbone_channels_size : Tuple
         Tuple of different levels of sub-network feature maps.
+    low_level_features: int, optional
+        Feature size for the low resolution block
+    high_level_features: int, optional
+        Feature size for the high resolution block
     input_size : Tuple
         Tuple of network input sizes.
     """
@@ -124,6 +128,10 @@ class DMANet(nn.Module):
         Number of output classes, by default 19
     input_size : List, optional
         List of network input sizes, by default [640, 640]
+    low_level_features: int, optional
+        Feature size for the low resolution block
+    high_level_features: int, optional
+        Feature size for the high resolution block
     backbone_type : str, optional
         Backbone type for timm model constructor, by default 'resnet18'
     backbone_pretrained : bool, optional
