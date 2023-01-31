@@ -14,6 +14,8 @@ optimized_metric: "val/acc"
 # it optimizes for value returned from function with @hydra.main decorator
 # docs: https://hydra.cc/docs/next/plugins/optuna_sweeper
 hydra:
+  mode: "MULTIRUN" # set hydra to multirun by default if this config is attached
+
   sweeper:
     _target_: hydra_plugins.hydra_optuna_sweeper.optuna_sweeper.OptunaSweeper
 
@@ -43,5 +45,6 @@ hydra:
     # define hyperparameter search space
     params:
       model.optimizer.lr: interval(0.0001, 0.1)
-      model.net.intermediate_channels: choice([64, 64], [128, 128], [256, 256], [512, 512])
+      model.net.low_level_features: range(128, 1024, 32)
+      model.net.high_level_features: range(128, 1024, 32)
       datamodule.batch_size: choice(4, 8, 16)
