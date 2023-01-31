@@ -26,51 +26,51 @@ class MultiAggregationNetwork(nn.Module):
 
     def __init__(self,
                  num_classes: int,
-                 backbone_channels: List[int],
-                 intermediate_channels: List[int] = [64, 64],
+                 backbone_channels_size: List[int],
+                 low_level_features: int = 128,
+                 high_level_features: int = 128,
                  input_size: List[int] = [640, 640]
                  ):
         super().__init__()
 
-        base, low, mid, high = backbone_channels
-        inter_low, inter_high = intermediate_channels
-        inter_low = inter_low if inter_low >= base else base
-        inter_high = inter_high if inter_high >= base else base
+        base, low, mid, high = backbone_channels_size
+        low_level_features = low_level_features if low_level_features >= low else low
+        high_level_features = high_level_features if high_level_features >= low else low
         self._input_size = np.array(input_size)
 
         # LERB layers
-        self._low_lerb = layers.LatticeEnhancedBlock(x_channels=inter_low, m_channels=base)
-        self._mid_lerb = layers.LatticeEnhancedBlock(x_channels=inter_high, m_channels=base)
-        self._high_lerb = layers.LatticeEnhancedBlock(x_channels=inter_high, m_channels=base)
+        self._low_lerb = layers.LatticeEnhancedBlock(x_channels=low_level_features//2, m_channels=base)
+        self._mid_lerb = layers.LatticeEnhancedBlock(x_channels=high_level_features//2, m_channels=base)
+        self._high_lerb = layers.LatticeEnhancedBlock(x_channels=high_level_features//2, m_channels=base)
 
         # Downsampling CBR layers
         self._low_cbr = nn.Sequential(
             layers.ConvBNReLU(in_channels=low, out_channels=low // 2),
-            layers.ConvBNReLU(in_channels=low // 2, out_channels=inter_low),
+            layers.ConvBNReLU(in_channels=low // 2, out_channels=low_level_features//2),
         )
 
         self._mid_cbr = nn.Sequential(
             layers.ConvBNReLU(in_channels=mid, out_channels=mid // 2),
-            layers.ConvBNReLU(in_channels=mid // 2, out_channels=inter_high),
+            layers.ConvBNReLU(in_channels=mid // 2, out_channels=high_level_features//2),
         )
 
         self._high_cbr = nn.Sequential(
             layers.ConvBNReLU(in_channels=high, out_channels=high // 2),
-            layers.ConvBNReLU(in_channels=high // 2, out_channels=inter_high),
+            layers.ConvBNReLU(in_channels=high // 2, out_channels=high_level_features//2),
         )
 
         # GCB Layer
-        self._gcb_conv = layers.ConvBNReLU(high, 2*inter_high)
+        self._gcb_conv = layers.ConvBNReLU(high, high_level_features, padding='same')
 
         # FTB layers
-        self._high_ftb = layers.FeatureTransformationBlock(in_channels=2*inter_high)
-        self._mid_ftb = layers.FeatureTransformationBlock(in_channels=2*inter_low)
+        self._high_ftb = layers.FeatureTransformationBlock(in_channels=high_level_features)
+        self._mid_ftb = layers.FeatureTransformationBlock(in_channels=low_level_features)
 
         # Upsampling CBR
         self._upmid_cbr = layers.ConvBNReLU(
-            in_channels=2*inter_high, out_channels=2*inter_low)
+            in_channels=high_level_features, out_channels=low_level_features)
         self._uplow_cbr = layers.ConvBNReLU(
-            in_channels=2*inter_low, out_channels=num_classes, use_activation=False)
+            in_channels=low_level_features, out_channels=num_classes, use_activation=False)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -134,7 +134,8 @@ class DMANet(nn.Module):
         self,
         num_classes: int = 19,
         input_size: List[int] = [640, 640],
-        intermediate_channels: List[int] = [64, 64],
+        low_level_features: int = 128,
+        high_level_features: int = 128,
         backbone_type: str = 'resnet18',
         backbone_pretrained: bool = True,
     ):
@@ -148,8 +149,9 @@ class DMANet(nn.Module):
             features_only=True, out_indices=(1, 2, 3, 4))
         self._decoder = MultiAggregationNetwork(
             num_classes=num_classes,
-            backbone_channels=self._encoder.feature_info.channels(),
-            intermediate_channels=intermediate_channels,
+            backbone_channels_size=self._encoder.feature_info.channels(),
+            low_level_features=low_level_features,
+            high_level_features=high_level_features,
             input_size=input_size)
 
     @property
