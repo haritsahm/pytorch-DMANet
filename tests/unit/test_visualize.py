@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 import src.utils.visualize as viz_tool
-from src.datamodules.cityscape_datamodule import CityscapeDataModule
+from src.datamodules.dmanet_datamodule import DMANetDataModule
 
 
 @pytest.fixture
@@ -12,6 +12,7 @@ def config():
         'data_dir': '/media/haritsahm/DataStorage/dataset/cityscapes/cityscape_fo_segmentation',
         'dataloader': 'src.datamodules.components.fiftyone_dataset.ImageSegmentationDirectory',
         'num_classes': 19,
+        'iamge_size': [640, 640],
         'train_transform': None,
         'test_transform': None,
         'batch_size': 4,
@@ -22,7 +23,7 @@ def config():
 
 def test_get_color_mask(config):
 
-    datamodule = CityscapeDataModule(**config)
+    datamodule = DMANetDataModule(**config)
     datamodule.setup()
     images, targets = next(iter(datamodule.train_dataloader()))
 

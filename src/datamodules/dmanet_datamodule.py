@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 import albumentations as Albu
 import hydra
@@ -7,10 +7,10 @@ from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
 
 
-class CityscapeDataModule(LightningDataModule):
-    """Cityscape Wrapped in Lightning Datamodule.
+class DMANetDataModule(LightningDataModule):
+    """Datamodule Wrapped in Lightning Datamodule.
 
-    Lightning datamodule for cityscape dataset.
+    Lightning datamodule for DMANet dataset.
     The datamodule can be initialized using different dataset formats depending on the users.
     Albumentation is the default transformation pipeline for easy to use and reconfigurable setups.
     For full documentation of LightningDataModule, plese read the docs.
@@ -29,6 +29,7 @@ class CityscapeDataModule(LightningDataModule):
         data_dir: str,
         dataloader: str,
         num_classes: int = 19,
+        image_size: List = [640, 640],
         train_transform: Optional[Albu.Compose] = None,
         test_transform: Optional[Albu.Compose] = None,
         batch_size: int = 16,
@@ -45,19 +46,21 @@ class CityscapeDataModule(LightningDataModule):
         # this line allows to access init params with 'self.hparams' attribute
         self.save_hyperparameters(logger=False)
 
+        im_height, im_width = image_size
+
         # data transformations
         self._train_transform: Albu.Compose = Albu.Compose([
             Albu.HorizontalFlip(p=0.5),
             Albu.RandomScale((-0.5, 1.0), interpolation=2),
-            Albu.SmallestMaxSize(max_size=720, interpolation=2),
-            Albu.RandomCrop(width=640, height=640),
+            Albu.SmallestMaxSize(max_size=int(im_width*1.5), interpolation=2),
+            Albu.RandomCrop(width=im_width, height=im_height),
             Albu.RandomBrightnessContrast(p=0.2),
             Albu.Normalize(mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
             ToTensorV2(),
         ])
 
         self._test_transform: Albu.Compose = Albu.Compose([
-            Albu.Resize(width=640, height=640),
+            Albu.Resize(width=im_width, height=im_height),
             Albu.Normalize(mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
             ToTensorV2(),
         ])

@@ -1,4 +1,4 @@
-from typing import List
+from typing import Iterable, List
 
 import numpy as np
 import timm
@@ -18,57 +18,69 @@ class MultiAggregationNetwork(nn.Module):
     ----------
     num_classes : int
         Number of output classes.
-    channels : List
-        List of different levels of sub-network feature maps.
-    input_size : List
-        List of network input sizes.
+    backbone_channels_size : Tuple
+        Tuple of different levels of sub-network feature maps.
+    low_level_features: int, optional
+        Feature size for the low resolution block
+    high_level_features: int, optional
+        Feature size for the high resolution block
+    input_size : Tuple
+        Tuple of network input sizes.
     """
 
-    def __init__(self, num_classes: int, channels: List, input_size: List):
+    def __init__(self,
+                 num_classes: int,
+                 backbone_channels_size: List[int],
+                 low_level_features: int = 128,
+                 high_level_features: int = 128,
+                 input_size: List[int] = [640, 640]
+                 ):
         super().__init__()
 
-        base, low, mid, high = channels
+        base, low, mid, high = backbone_channels_size
+        low_level_features = low_level_features if low_level_features >= low else low
+        high_level_features = high_level_features if high_level_features >= low else low
         self._input_size = np.array(input_size)
 
         # LERB layers
-        self._low_lerb = layers.LatticeEnhancedBlock(x_channels=64, m_channels=base)
-        self._mid_lerb = layers.LatticeEnhancedBlock(x_channels=64, m_channels=base)
-        self._high_lerb = layers.LatticeEnhancedBlock(x_channels=64, m_channels=base)
+        self._low_lerb = layers.LatticeEnhancedBlock(x_channels=low_level_features//2, m_channels=base)
+        self._mid_lerb = layers.LatticeEnhancedBlock(x_channels=high_level_features//2, m_channels=base)
+        self._high_lerb = layers.LatticeEnhancedBlock(x_channels=high_level_features//2, m_channels=base)
 
         # Downsampling CBR layers
         self._low_cbr = nn.Sequential(
             layers.ConvBNReLU(in_channels=low, out_channels=low // 2),
-            layers.ConvBNReLU(in_channels=low // 2, out_channels=64),
+            layers.ConvBNReLU(in_channels=low // 2, out_channels=low_level_features//2),
         )
 
         self._mid_cbr = nn.Sequential(
             layers.ConvBNReLU(in_channels=mid, out_channels=mid // 2),
-            layers.ConvBNReLU(in_channels=mid // 2, out_channels=64),
+            layers.ConvBNReLU(in_channels=mid // 2, out_channels=high_level_features//2),
         )
 
         self._high_cbr = nn.Sequential(
             layers.ConvBNReLU(in_channels=high, out_channels=high // 2),
-            layers.ConvBNReLU(in_channels=high // 2, out_channels=64),
+            layers.ConvBNReLU(in_channels=high // 2, out_channels=high_level_features//2),
         )
 
         # GCB Layer
-        self._gcb_conv = layers.ConvBNReLU(high, 128)
+        self._gcb_conv = layers.ConvBNReLU(high, high_level_features, padding='same')
 
         # FTB layers
-        self._high_ftb = layers.FeatureTransformationBlock(in_channels=128)
-        self._mid_ftb = layers.FeatureTransformationBlock(in_channels=128)
+        self._high_ftb = layers.FeatureTransformationBlock(in_channels=high_level_features)
+        self._mid_ftb = layers.FeatureTransformationBlock(in_channels=low_level_features)
 
         # Upsampling CBR
         self._upmid_cbr = layers.ConvBNReLU(
-            in_channels=128, out_channels=128)
+            in_channels=high_level_features, out_channels=low_level_features)
         self._uplow_cbr = layers.ConvBNReLU(
-            in_channels=128, out_channels=num_classes, use_activation=False)
+            in_channels=low_level_features, out_channels=num_classes, use_activation=False)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 weight_init.kaiming_init(m)
 
-    def forward(self, x: List) -> torch.Tensor:
+    def forward(self, x: Iterable) -> torch.Tensor:
         c2, c3, c4, c5 = x
 
         low_features = self._low_lerb(
@@ -116,6 +128,10 @@ class DMANet(nn.Module):
         Number of output classes, by default 19
     input_size : List, optional
         List of network input sizes, by default [640, 640]
+    low_level_features: int, optional
+        Feature size for the low resolution block
+    high_level_features: int, optional
+        Feature size for the high resolution block
     backbone_type : str, optional
         Backbone type for timm model constructor, by default 'resnet18'
     backbone_pretrained : bool, optional
@@ -125,7 +141,9 @@ class DMANet(nn.Module):
     def __init__(
         self,
         num_classes: int = 19,
-        input_size: List = [640, 640],
+        input_size: List[int] = [640, 640],
+        low_level_features: int = 128,
+        high_level_features: int = 128,
         backbone_type: str = 'resnet18',
         backbone_pretrained: bool = True,
     ):
@@ -139,7 +157,9 @@ class DMANet(nn.Module):
             features_only=True, out_indices=(1, 2, 3, 4))
         self._decoder = MultiAggregationNetwork(
             num_classes=num_classes,
-            channels=self._encoder.feature_info.channels(),
+            backbone_channels_size=self._encoder.feature_info.channels(),
+            low_level_features=low_level_features,
+            high_level_features=high_level_features,
             input_size=input_size)
 
     @property

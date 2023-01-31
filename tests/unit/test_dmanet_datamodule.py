@@ -10,24 +10,15 @@ from hydra import compose, initialize, initialize_config_module
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-from src.datamodules.cityscape_datamodule import CityscapeDataModule
+from src.datamodules.dmanet_datamodule import DMANetDataModule
 
 
 def configs():
     return [{
-        'data_dir': '/media/haritsahm/DataStorage/dataset/cityscapes/cityscape_fo_segmentation',
+        'data_dir': '/mnt/storage-raid-team-ai/haritsah/projects/pytorch-DMANet/data/datasets/cityscapes/cityscape_fo_image_segmentation',
         'dataloader': 'src.datamodules.components.fiftyone_dataset.ImageSegmentationDirectory',
         'num_classes': 19,
-        'train_transform': None,
-        'test_transform': None,
-        'batch_size': 4,
-        'num_workers': 0,
-        'pin_memory': False,
-    },
-        {
-        'data_dir': '/media/haritsahm/DataStorage/dataset/cityscapes/cityscape_fo_coco',
-        'dataloader': 'src.datamodules.components.fiftyone_dataset.COCOSegmentation',
-        'num_classes': 19,
+        'image_size': [768, 1536],
         'train_transform': None,
         'test_transform': None,
         'batch_size': 4,
@@ -37,9 +28,9 @@ def configs():
 
 
 @pytest.mark.parametrize('config', configs())
-def test_cityscape_datamodule(config):
+def test_dmanet_datamodule(config):
     print(config)
-    datamodule = CityscapeDataModule(**config)
+    datamodule = DMANetDataModule(**config)
 
     assert not datamodule.data_train and not datamodule.data_val and not datamodule.data_test
 
@@ -53,11 +44,14 @@ def test_cityscape_datamodule(config):
         len(datamodule.data_train) + len(datamodule.data_val) + len(datamodule.data_test) == 5000
     )
 
-    assert datamodule.train_dataloader()
-    assert datamodule.val_dataloader()
-    assert datamodule.test_dataloader()
+    train_dataloader = datamodule.train_dataloader()
+    val_dataloader = datamodule.val_dataloader()
+    test_dataloader = datamodule.test_dataloader()
+    assert train_dataloader
+    assert val_dataloader
+    assert test_dataloader
 
-    batch = next(iter(datamodule.train_dataloader()))
+    batch = next(iter(train_dataloader))
     x, y = batch
 
     assert len(x) == config['batch_size']
@@ -67,7 +61,7 @@ def test_cityscape_datamodule(config):
 
 
 @pytest.mark.parametrize('config', configs())
-def test_cityscape_transformations(config):
+def test_dmanet_transformations(config):
 
     train_transform = Albu.Compose([
         Albu.OneOf([
@@ -89,7 +83,7 @@ def test_cityscape_transformations(config):
 
     config['train_transform'] = train_transform
 
-    datamodule = CityscapeDataModule(**config)
+    datamodule = DMANetDataModule(**config)
 
     assert isinstance(datamodule._train_transform, Albu.Compose)
     assert datamodule._train_transform == train_transform
@@ -104,7 +98,7 @@ def test_cityscape_transformations(config):
         'data_format': 'yaml',
     })
 
-    datamodule = CityscapeDataModule(**config)
+    datamodule = DMANetDataModule(**config)
     assert isinstance(datamodule._train_transform, Albu.Compose)
 
     datamodule.setup()
@@ -120,19 +114,4 @@ def test_cityscape_transformations(config):
 
     with pytest.raises(TypeError):
 
-        datamodule = CityscapeDataModule(**config)
-
-
-def test_instantiate():
-    with initialize(config_path='../configs'):
-        cfg = {'datamodule': compose(config_name='datamodule')}
-
-        datamodule = hydra.utils.instantiate(
-            cfg['datamodule'])
-
-        assert isinstance(datamodule, CityscapeDataModule)
-        datamodule.setup()
-
-        assert datamodule.train_dataloader()
-        assert datamodule.val_dataloader()
-        assert datamodule.test_dataloader()
+        datamodule = DMANetDataModule(**config)

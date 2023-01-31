@@ -1,8 +1,9 @@
-_target_: src.datamodules.cityscape_datamodule.CityscapeDataModule
+_target_: src.datamodules.dmanet_datamodule.DMANetDataModule
 
 data_dir: ${data_dir} # data_dir is specified in config.yaml
 dataloader: src.datamodules.components.fiftyone_dataset.ImageSegmentationDirectory
 num_classes: 19
+image_size: [768, 1536]
 train_transform: null
 test_transform: null
 batch_size: 16

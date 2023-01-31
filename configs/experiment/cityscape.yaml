@@ -14,7 +14,7 @@ defaults:
 # this allows you to overwrite only specified parameters
 
 # name of the run determines folder name in logs
-name: "dma_net"
+name: "dmanet_cityscape"
 
 seed: 43
 
@@ -36,3 +36,5 @@ model:
 datamodule:
   num_classes: ${model.net.num_classes}
   batch_size: 16
+  image_size: [768, 1536]
+  num_workers: 4
