@@ -44,7 +44,7 @@ hydra:
 
     # define hyperparameter search space
     params:
-      model.optimizer.lr: interval(0.0001, 0.1)
+      model.lr: interval(0.0001, 0.1)
       model.net.low_level_features: range(128, 1024, 32)
       model.net.high_level_features: range(128, 1024, 32)
       datamodule.batch_size: choice(4, 8, 16)
