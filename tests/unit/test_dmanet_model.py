@@ -18,17 +18,20 @@ def test_man_layer(batch_size, input_shape):
     c4 = torch.rand(batch_size, 256, *(input_shape // 4))
     c5 = torch.rand(batch_size, 512, *(input_shape // 8))
 
-    low_feat, high_feat = random.randrange(64, 256, 16), random.randrange(64, 256, 16)
+    low_feat, high_feat = random.randrange(128, 512, 16), random.randrange(128, 512, 16)
 
     layer = net.MultiAggregationNetwork(
-        num_classes=19, backbone_channels=[64, 128, 256, 512],
-        intermediate_channels=[low_feat, high_feat], input_size=(input_shape * 4).tolist())
-
+        num_classes=19,
+        backbone_channels_size=[64, 128, 256, 512],
+        low_level_features=low_feat,
+        high_level_features=high_feat,
+        input_size=(input_shape * 4).tolist(),
+    )
     features, mid_aux, high_aux = layer([c2, c3, c4, c5])
 
     assert features.shape == (batch_size, 19, *(input_shape * 4))
-    assert mid_aux.shape == (batch_size, 2*low_feat, *(input_shape // 4))
-    assert high_aux.shape == (batch_size, 2*high_feat, *(input_shape // 8))
+    assert mid_aux.shape == (batch_size, low_feat, *(input_shape // 4))
+    assert high_aux.shape == (batch_size, high_feat, *(input_shape // 8))
 
 
 @pytest.mark.parametrize('batch_size,input_shape',
@@ -40,12 +43,16 @@ def test_dmanet(batch_size, input_shape):
     if torch.cuda.is_available():
         device = torch.device('cuda')
 
-    low_feat, high_feat = random.randrange(64, 256, 16), random.randrange(64, 256, 16)
+    low_feat, high_feat = random.randrange(128, 512, 16), random.randrange(128, 512, 16)
 
     input_shape = np.array(input_shape)
     x = torch.rand(batch_size, 3, *input_shape.tolist(), device=device)
-    model = net.DMANet(num_classes=19, input_size=input_shape.tolist(),
-                       intermediate_channels=[low_feat, high_feat])
+    model = net.DMANet(
+        num_classes=19,
+        input_size=input_shape.tolist(),
+        low_level_features=low_feat,
+        high_level_features=high_feat,
+    )
     model.to(device)
 
     # Model for training
@@ -54,8 +61,8 @@ def test_dmanet(batch_size, input_shape):
 
     # Check training output
     assert output.shape == (batch_size, 19, *input_shape.tolist())
-    assert mid_aux.shape == (batch_size, 2*low_feat, *(input_shape // 16).tolist())
-    assert high_aux.shape == (batch_size, 2*high_feat, *(input_shape // 32).tolist())
+    assert mid_aux.shape == (batch_size, low_feat, *(input_shape // 16).tolist())
+    assert high_aux.shape == (batch_size, high_feat, *(input_shape // 32).tolist())
 
     # Model for inference
     model.eval()
