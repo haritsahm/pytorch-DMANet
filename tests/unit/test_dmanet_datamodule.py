@@ -15,7 +15,7 @@ from src.datamodules.dmanet_datamodule import DMANetDataModule
 
 def configs():
     return [{
-        'data_dir': '/mnt/storage-raid-team-ai/haritsah/projects/pytorch-DMANet/data/datasets/cityscapes/cityscape_fo_image_segmentation',
+        'data_dir': '/media/haritsahm/DataStorage/dataset/cityscapes/cityscape_fo_segmentation',
         'dataloader': 'src.datamodules.components.fiftyone_dataset.ImageSegmentationDirectory',
         'num_classes': 19,
         'image_size': [768, 1536],
