@@ -76,6 +76,7 @@ class DMANetDataModule(LightningDataModule):
         self._data_train: Optional[Dataset] = None
         self._data_val: Optional[Dataset] = None
         self._data_test: Optional[Dataset] = None
+        self._data_predict: Optional[Dataset] = None
 
     @property
     def num_classes(self) -> int:
@@ -85,15 +86,23 @@ class DMANetDataModule(LightningDataModule):
 
     @property
     def data_train(self):
+        """Train dataset."""
         return self._data_train
 
     @property
     def data_val(self):
+        """Validation dataset."""
         return self._data_val
 
     @property
     def data_test(self):
+        """Test dataset."""
         return self._data_test
+
+    @property
+    def data_predict(self):
+        """Prediction dataset."""
+        return self._data_predict
 
     def setup(self, stage: Optional[str] = None):
         """Initialize and load dataset.
@@ -102,20 +111,33 @@ class DMANetDataModule(LightningDataModule):
         """
 
         # load datasets only if they're not loaded already
-        if not self._data_train and not self._data_val and not self._data_test:
-            self._data_train = hydra.utils.instantiate(
-                self._loader_cls['dataloader'], dataset_dir=self.hparams.data_dir,
-                stage='train', transform=self._train_transform)
-            self._data_val = hydra.utils.instantiate(
-                self._loader_cls['dataloader'], dataset_dir=self.hparams.data_dir,
-                stage='validation', transform=self._test_transform)
-            self._data_test = hydra.utils.instantiate(
-                self._loader_cls['dataloader'], dataset_dir=self.hparams.data_dir,
-                stage='test', transform=self._test_transform)
+        if not self._data_train or not self._data_val or not self._data_test or not self.data_predict:
+            if stage in ['train', None]:
+                self._data_train = hydra.utils.instantiate(
+                    self._loader_cls['dataloader'], dataset_dir=self.hparams.data_dir,
+                    stage='train', transform=self._train_transform)
+                if len(self._data_train) == 0:
+                    raise ValueError('Train dataset is empty.')
+            if stage in ['validation', 'test', None]:
+                self._data_val = hydra.utils.instantiate(
+                    self._loader_cls['dataloader'], dataset_dir=self.hparams.data_dir,
+                    stage='validation', transform=self._test_transform)
+                if len(self._data_val) == 0:
+                    raise ValueError('Validation dataset is empty.')
+                self._data_test = hydra.utils.instantiate(
+                    self._loader_cls['dataloader'], dataset_dir=self.hparams.data_dir,
+                    stage='test', transform=self._test_transform)
+                if len(self._data_test) == 0:
+                    raise ValueError('Test dataset is empty.')
+            if stage == 'predict':
+                self._data_predict = hydra.utils.instantiate(
+                    self._loader_cls['dataloader'], dataset_dir=self.hparams.data_dir,
+                    stage='predict', transform=self._test_transform)
+                if len(self._data_predict) == 0:
+                    raise ValueError('Predict dataset is empty.')
 
     def train_dataloader(self):
-        """Initialize train dataloader."""
-
+        """Get train dataloader."""
         return DataLoader(
             dataset=self._data_train,
             batch_size=self.hparams.batch_size,
@@ -126,8 +148,7 @@ class DMANetDataModule(LightningDataModule):
         )
 
     def val_dataloader(self):
-        """Initialize validation dataloader."""
-
+        """Get validation dataloader."""
         return DataLoader(
             dataset=self._data_val,
             batch_size=self.hparams.batch_size,
@@ -137,10 +158,19 @@ class DMANetDataModule(LightningDataModule):
         )
 
     def test_dataloader(self):
-        """Initialize test dataloader."""
-
+        """Get test dataloader."""
         return DataLoader(
             dataset=self._data_test,
+            batch_size=self.hparams.batch_size,
+            num_workers=self.hparams.num_workers,
+            pin_memory=self.hparams.pin_memory,
+            shuffle=False,
+        )
+
+    def predict_dataloader(self):
+        """Get prediction dataloader."""
+        return DataLoader(
+            dataset=self._data_predict,
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,

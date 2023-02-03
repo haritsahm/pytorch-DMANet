@@ -29,7 +29,6 @@ def configs():
 
 @pytest.mark.parametrize('config', configs())
 def test_dmanet_datamodule(config):
-    print(config)
     datamodule = DMANetDataModule(**config)
 
     assert not datamodule.data_train and not datamodule.data_val and not datamodule.data_test
@@ -52,6 +51,32 @@ def test_dmanet_datamodule(config):
     assert test_dataloader
 
     batch = next(iter(train_dataloader))
+    x, y = batch
+
+    assert len(x) == config['batch_size']
+    assert len(y) == config['batch_size']
+    assert x.dtype == torch.float32
+    assert y.dtype == torch.int64
+
+
+@pytest.mark.parametrize('config', configs())
+def test_dmanet_video_datamodule(config):
+    config['data_dir'] = '/media/haritsahm/DataStorage/dataset/samples/videos/Driving_in_BRISTOL_England_City_Center.mp4'
+    config['dataloader'] = 'src.datamodules.components.streams.VideoReader'
+    datamodule = DMANetDataModule(**config)
+
+    assert not datamodule.data_predict
+
+    assert os.path.exists(config['data_dir'])
+
+    datamodule.setup('predict')
+
+    assert isinstance(datamodule.data_predict, Dataset)
+
+    predict_dataloader = datamodule.predict_dataloader()
+    assert predict_dataloader
+
+    batch = next(iter(predict_dataloader))
     x, y = batch
 
     assert len(x) == config['batch_size']
