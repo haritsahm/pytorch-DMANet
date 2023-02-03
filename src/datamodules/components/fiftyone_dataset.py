@@ -88,6 +88,7 @@ class ImageSegmentationDirectory(Dataset):
 
         if isinstance(image, np.ndarray):
             image = torch.from_numpy(image)
+            image /= 255.0
 
         if isinstance(mask, np.ndarray):
             mask = torch.from_numpy(mask)
