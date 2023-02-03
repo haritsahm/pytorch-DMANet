@@ -1,6 +1,8 @@
 from typing import Any, List
+import os
 
 import aim
+import cv2
 import neptune.new as neptune
 import numpy as np
 import torch
@@ -8,10 +10,12 @@ import torch.nn.functional as F
 import torchmetrics as tm
 from neptune.new.types import File
 from pytorch_lightning import LightningModule
+from torchvision.io import write_video
 
 import src.models.functions.loss as loss_fn
 import src.models.functions.scheduler as lr_scheduler
 from src.utils import visualize
+from pathlib import Path
 
 
 class DMANetLitModule(LightningModule):
@@ -175,6 +179,43 @@ class DMANetLitModule(LightningModule):
         """Reset metrics at the end of every epoch."""
 
         self._val_metrics.reset()
+
+    def predict_step(self, batch: Any, batch_idx: int):
+        images, logits, gt_masks = self.step(batch)
+
+        pd_masks = torch.argmax(logits, dim=1)
+
+        images = images.cpu().numpy()
+        pd_masks = pd_masks.to(torch.uint8).cpu().numpy()
+
+        colored_masks = []
+
+        for idx, (image, target) in enumerate(zip(images, pd_masks)):
+
+            image = (image * 255).astype(np.uint8).transpose((1, 2, 0))
+            mask = visualize.show_prediction(image, target, overlay=0.4)
+            mask = cv2.resize(mask, (1920,1080), interpolation = cv2.INTER_CUBIC)
+            colored_masks.append(mask)
+
+        return colored_masks
+
+
+    def on_predict_epoch_end(self, outputs: List[Any]):
+        outputs = np.concatenate(outputs, axis=0).astype(np.uint8)
+        outputs = torch.from_numpy(outputs).squeeze()
+
+        predict_ds = self.trainer.datamodule.data_predict
+        if hasattr(predict_ds, 'video_data'):
+            output_file = Path(predict_ds.dataset_dir).name
+            video_fps = int(predict_ds.video_fps)
+
+            print(f'Writing output to {os.path.join(os.getcwd(), output_file)}')
+
+            write_video(
+                filename=output_file,
+                video_array=outputs,
+                fps=video_fps,
+            )
 
     def configure_optimizers(self):
         """Choose what optimizers and learning-rate schedulers to use in your optimization. Normally
