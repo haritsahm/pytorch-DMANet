@@ -1,6 +1,8 @@
 from typing import Any, List
+import os
 
 import aim
+import cv2
 import neptune.new as neptune
 import numpy as np
 import torch
@@ -8,10 +10,13 @@ import torch.nn.functional as F
 import torchmetrics as tm
 from neptune.new.types import File
 from pytorch_lightning import LightningModule
+from torchvision.io import write_video
 
 import src.models.functions.loss as loss_fn
 import src.models.functions.scheduler as lr_scheduler
+import src.models.functions.optimizer as custom_optimizer
 from src.utils import visualize
+from pathlib import Path
 
 
 class DMANetLitModule(LightningModule):
@@ -34,7 +39,11 @@ class DMANetLitModule(LightningModule):
         criterion_type: str = 'crossentropy',
         ignore_label: int = 255,
         aux_weight: float = 1.0,
+        auto_lr: bool = False,
+        optimizer_type: str = 'sgd',
         lr: float = 0.005,
+        lr_power: float = 0.9,
+        momentum: float = 0.9,
         weight_decay: float = 0.0005,
         warmup_iters: int = 2500,
     ):
@@ -176,6 +185,43 @@ class DMANetLitModule(LightningModule):
 
         self._val_metrics.reset()
 
+    def predict_step(self, batch: Any, batch_idx: int):
+        images, logits, gt_masks = self.step(batch)
+
+        pd_masks = torch.argmax(logits, dim=1)
+
+        images = images.cpu().numpy()
+        pd_masks = pd_masks.to(torch.uint8).cpu().numpy()
+
+        colored_masks = []
+
+        for idx, (image, target) in enumerate(zip(images, pd_masks)):
+
+            image = (image * 255).astype(np.uint8).transpose((1, 2, 0))
+            mask = visualize.show_prediction(image, target, overlay=0.4)
+            mask = cv2.resize(mask, (1920,1080), interpolation = cv2.INTER_CUBIC)
+            colored_masks.append(mask)
+
+        return colored_masks
+
+
+    def on_predict_epoch_end(self, outputs: List[Any]):
+        outputs = np.concatenate(outputs, axis=0).astype(np.uint8)
+        outputs = torch.from_numpy(outputs).squeeze()
+
+        predict_ds = self.trainer.datamodule.data_predict
+        if hasattr(predict_ds, 'video_data'):
+            output_file = Path(predict_ds.dataset_dir).name
+            video_fps = int(predict_ds.video_fps)
+
+            print(f'Writing output to {os.path.join(os.getcwd(), output_file)}')
+
+            write_video(
+                filename=output_file,
+                video_array=outputs,
+                fps=video_fps,
+            )
+
     def configure_optimizers(self):
         """Choose what optimizers and learning-rate schedulers to use in your optimization. Normally
         you'd need one. But in the case of GANs or similar you might have multiple.
@@ -183,12 +229,47 @@ class DMANetLitModule(LightningModule):
         See examples here:
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
-        optimizer = torch.optim.SGD(
-            params=self.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay
+        if self.hparams.optimizer_type.lower() not in ['sgd', 'adam']:
+            raise ValueError("Optimizer type must between Adam or SGD")
+
+        optimizer = None
+        if self.hparams.optimizer_type.lower() == 'sgd':
+            optimizer_func = torch.optim.SGD
+            if self.hparams.auto_lr:
+                optimizer_func = custom_optimizer.DAdaptSGD
+
+            optimizer = optimizer_func(
+                params=self.parameters(),
+                lr=self.hparams.lr,
+                momentum=self.hparams.momentum,
+                weight_decay=self.hparams.weight_decay,
+            )
+
+        elif self.hparams.optimizer_type.lower() == 'adam':
+            optimizer_func = torch.optim.Adam
+            if self.hparams.auto_lr:
+                optimizer_func = custom_optimizer.DAdaptAdam
+
+            optimizer = optimizer_func(
+                params=self.parameters(),
+                lr=self.hparams.lr,
+                weight_decay=self.hparams.weight_decay,
+            )
+
+        if self.hparams.auto_lr and self.hparams.lr < 1.0:
+            raise ValueError("LR must be 1.0 if using Auto LR")
+
+        scheduler = lr_scheduler.PolynomialLR(
+            optimizer,
+            total_iters=self.trainer.max_steps,
+            power=self.hparams.lr_power
         )
 
-        scheduler = lr_scheduler.WarmupPolyLR(
-            optimizer=optimizer, target_lr=self.hparams.lr, max_iters=self.trainer.estimated_stepping_batches,
-            warmup_iters=self.hparams.warmup_iters)
-
-        return {'optimizer': optimizer, 'lr_scheduler': scheduler}
+        return {
+            'optimizer': optimizer,
+            'lr_scheduler': {
+                "scheduler": scheduler,
+                "interval": "step",
+                "name": None,
+            }
+        }
