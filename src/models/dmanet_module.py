@@ -14,6 +14,7 @@ from torchvision.io import write_video
 
 import src.models.functions.loss as loss_fn
 import src.models.functions.scheduler as lr_scheduler
+import src.models.functions.optimizer as custom_optimizer
 from src.utils import visualize
 from pathlib import Path
 
@@ -38,6 +39,8 @@ class DMANetLitModule(LightningModule):
         criterion_type: str = 'crossentropy',
         ignore_label: int = 255,
         aux_weight: float = 1.0,
+        auto_lr: bool = False,
+        optimizer_type: str = 'sgd',
         lr: float = 0.005,
         lr_power: float = 0.9,
         momentum: float = 0.9,
@@ -226,12 +229,35 @@ class DMANetLitModule(LightningModule):
         See examples here:
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
-        optimizer = torch.optim.SGD(
-            params=self.parameters(),
-            lr=self.hparams.lr,
-            weight_decay=self.hparams.weight_decay,
-            momentum=self.hparams.momentum,
-        )
+        if self.hparams.optimizer_type.lower() not in ['sgd', 'adam']:
+            raise ValueError("Optimizer type must between Adam or SGD")
+
+        optimizer = None
+        if self.hparams.optimizer_type.lower() == 'sgd':
+            optimizer_func = torch.optim.SGD
+            if self.hparams.auto_lr:
+                optimizer_func = custom_optimizer.DAdaptSGD
+
+            optimizer = optimizer_func(
+                params=self.parameters(),
+                lr=self.hparams.lr,
+                momentum=self.hparams.momentum,
+                weight_decay=self.hparams.weight_decay,
+            )
+
+        elif self.hparams.optimizer_type.lower() == 'adam':
+            optimizer_func = torch.optim.Adam
+            if self.hparams.auto_lr:
+                optimizer_func = custom_optimizer.DAdaptAdam
+
+            optimizer = optimizer_func(
+                params=self.parameters(),
+                lr=self.hparams.lr,
+                weight_decay=self.hparams.weight_decay,
+            )
+
+        if self.hparams.auto_lr and self.hparams.lr < 1.0:
+            raise ValueError("LR must be 1.0 if using Auto LR")
 
         scheduler = lr_scheduler.PolynomialLR(
             optimizer,
