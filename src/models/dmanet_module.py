@@ -39,6 +39,7 @@ class DMANetLitModule(LightningModule):
         ignore_label: int = 255,
         aux_weight: float = 1.0,
         lr: float = 0.005,
+        momentum: float = 0.9,
         weight_decay: float = 0.0005,
         warmup_iters: int = 2500,
     ):
@@ -225,7 +226,10 @@ class DMANetLitModule(LightningModule):
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
         optimizer = torch.optim.SGD(
-            params=self.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay
+            params=self.parameters(),
+            lr=self.hparams.lr,
+            weight_decay=self.hparams.weight_decay,
+            momentum=self.hparams.momentum,
         )
 
         scheduler = lr_scheduler.WarmupPolyLR(
