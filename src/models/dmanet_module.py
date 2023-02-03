@@ -39,6 +39,7 @@ class DMANetLitModule(LightningModule):
         ignore_label: int = 255,
         aux_weight: float = 1.0,
         lr: float = 0.005,
+        lr_power: float = 0.9,
         momentum: float = 0.9,
         weight_decay: float = 0.0005,
         warmup_iters: int = 2500,
@@ -232,8 +233,17 @@ class DMANetLitModule(LightningModule):
             momentum=self.hparams.momentum,
         )
 
-        scheduler = lr_scheduler.WarmupPolyLR(
-            optimizer=optimizer, target_lr=self.hparams.lr, max_iters=self.trainer.estimated_stepping_batches,
-            warmup_iters=self.hparams.warmup_iters)
+        scheduler = lr_scheduler.PolynomialLR(
+            optimizer,
+            total_iters=self.trainer.max_steps,
+            power=self.hparams.lr_power
+        )
 
-        return {'optimizer': optimizer, 'lr_scheduler': scheduler}
+        return {
+            'optimizer': optimizer,
+            'lr_scheduler': {
+                "scheduler": scheduler,
+                "interval": "step",
+                "name": None,
+            }
+        }
