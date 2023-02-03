@@ -111,14 +111,14 @@ class DMANetDataModule(LightningDataModule):
         """
 
         # load datasets only if they're not loaded already
-        if not self._data_train or not self._data_val or not self._data_test:
-            if stage == 'train':
+        if not self._data_train or not self._data_val or not self._data_test or not self.data_predict:
+            if stage in ['train', None]:
                 self._data_train = hydra.utils.instantiate(
                     self._loader_cls['dataloader'], dataset_dir=self.hparams.data_dir,
                     stage='train', transform=self._train_transform)
                 if len(self._data_train) == 0:
                     raise ValueError('Train dataset is empty.')
-            elif stage in ['validation', 'test']:
+            if stage in ['validation', 'test', None]:
                 self._data_val = hydra.utils.instantiate(
                     self._loader_cls['dataloader'], dataset_dir=self.hparams.data_dir,
                     stage='validation', transform=self._test_transform)
@@ -129,7 +129,7 @@ class DMANetDataModule(LightningDataModule):
                     stage='test', transform=self._test_transform)
                 if len(self._data_test) == 0:
                     raise ValueError('Test dataset is empty.')
-            elif stage == 'predict':
+            if stage == 'predict':
                 self._data_predict = hydra.utils.instantiate(
                     self._loader_cls['dataloader'], dataset_dir=self.hparams.data_dir,
                     stage='predict', transform=self._test_transform)
