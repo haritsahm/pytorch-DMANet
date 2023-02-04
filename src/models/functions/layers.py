@@ -53,12 +53,11 @@ class FeatureTransformationBlock(nn.Module):
         v, w = [self._wlb(x_g) for _ in range(2)]
 
         x_s = self._ssb(x_f)
-        x_s = x_s.expand(-1, v.shape[1], -1, -1) * v.expand(-1, -1, *x_s.shape[2:])
+        x_s = x_s.expand(-1, v.shape[1], *x_s.shape[2:]) * v.expand(-1, v.shape[1], *x_s.shape[2:])
         x_c = self._csb(x_g)
-        x_c = x_s.expand(-1, w.shape[1], -1, -1) * w.expand(-1, -1, *x_c.shape[2:])
+        x_c = x_c.expand(-1, w.shape[1], *x_c.shape[2:]) * w.expand(-1, w.shape[1], *x_c.shape[2:])
 
         t = F.sigmoid(x_s + x_c.expand(x_s.shape))
-
         return t * x_f
 
 
