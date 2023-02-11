@@ -2,7 +2,7 @@ import os
 from typing import List, Optional
 
 import hydra
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf, open_dict
 from pytorch_lightning import Callback, LightningDataModule, LightningModule, Trainer, seed_everything
 from pytorch_lightning.loggers import LightningLoggerBase, NeptuneLogger
 
@@ -37,7 +37,18 @@ def train(config: DictConfig) -> Optional[float]:
     log.info(f'Instantiating datamodule <{config.datamodule._target_}>')
     datamodule: LightningDataModule = hydra.utils.instantiate(config.datamodule)
 
-    # Init lightning model
+    # Convert relative ckpt path to absolute path if necessary
+    model_ckpt_path = config.get('load_from_checkpoint')
+    if model_ckpt_path and not os.path.isabs(model_ckpt_path):
+        model_ckpt_path = os.path.join(
+            hydra.utils.get_original_cwd(), model_ckpt_path
+        )
+        log.info(f'Using checkpoint <{model_ckpt_path}>')
+        config.model._target_ += '.load_from_checkpoint'
+        OmegaConf.set_struct(config, True)
+        with open_dict(config):
+            config.model.checkpoint_path = model_ckpt_path
+
     log.info(f'Instantiating model <{config.model._target_}>')
     model: LightningModule = hydra.utils.instantiate(config.model)
 
