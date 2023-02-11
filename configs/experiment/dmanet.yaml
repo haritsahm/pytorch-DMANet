@@ -4,8 +4,8 @@
 # python train.py experiment=example
 
 defaults:
-  - override /datamodule: cityscape.yaml
-  - override /model: dma_net.yaml
+  - override /datamodule: dmanet.yaml
+  - override /model: dmanet.yaml
   - override /callbacks: default.yaml
   - override /logger: null
   - override /trainer: default.yaml
