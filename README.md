@@ -32,8 +32,6 @@ This is an implementation of DMA-Net in Pytorch. The project is for my self expl
     model.net.low_level_features=128 model.net.high_level_features=128
     ```
 
-
-
 # How to run
 ## Install dependencies
 
@@ -53,14 +51,15 @@ conda activate myenv
 pip install -r requirements.txt
 ```
 
-### Prepare dataset
+## Prepare dataset
 
 Run and follow the [notebook](notebooks/dataset-preparation.ipynb) to prepare and visualize dataset using Fiftyone
 ![Fiftyone Sample](docs/fiftyone-sample.png)
 
 
-## Train model with default configuration
+## Train Commands
 
+### 1. Train with default configurations
 ```bash
 # train on CPU
 python train.py trainer.gpus=0 data_dir=data/datasets/cityscapes/cityscape_fo_image_segmentation
@@ -69,28 +68,32 @@ python train.py trainer.gpus=0 data_dir=data/datasets/cityscapes/cityscape_fo_im
 python train.py trainer.gpus=1 data_dir=data/datasets/cityscapes/cityscape_fo_image_segmentation
 ```
 
-Train model with chosen experiment configuration from [configs/experiment/](configs/experiment/)
+### 2. Train model with chosen experiment configuration from [configs/experiment/](configs/experiment/)
 
 ```bash
 python train.py experiment=cityscape data_dir=data/datasets/cityscapes/cityscape_fo_image_segmentation
 ```
 
-You can override any parameter from command line like this
-
+### 3. Train using pretrained weights
 ```bash
-python train.py experiment=cityscape data_dir=data/datasets/cityscapes/cityscape_fo_image_segmentation trainer.max_epochs=20 datamodule.batch_size=64 model.net.low_level_features=128 model.net.high_level_features=256
+python train.py data_dir=data/datasets/cityscapes/cityscape_fo_image_segmentation +load_from_checkpoint=path/to/checkpoint.ckpt
 ```
 
-Track experiments with experiment trackers
+### 4. Track experiments with experiment trackers
 ```bash
 python train.py data_dir=data/datasets/cityscapes/cityscape_fo_image_segmentation trainer.max_epochs=20 datamodule.batch_size=64 logger=neptune
 ```
 
-Create a sweep over hyperparameters with Optuna
+### 5. Create a sweep over hyperparameters with Optuna
 ```
 python train.py -m experiment=cityscape hparams_search=dmanet_optuna data_dir=data/datasets/cityscapes/cityscape_fo_image_segmentation
 ```
 
+### 6. Override any parameter
+
+```bash
+python train.py experiment=cityscape data_dir=data/datasets/cityscapes/cityscape_fo_image_segmentation trainer.max_epochs=20 datamodule.batch_size=64 model.net.low_level_features=128 model.net.high_level_features=256
+```
 
 Read the full [documentation](docs/DOCS.md) on how to use pytorch-lightning + hydra
 
