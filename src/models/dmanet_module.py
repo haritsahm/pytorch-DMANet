@@ -1,5 +1,6 @@
-from typing import Any, List
 import os
+from pathlib import Path
+from typing import Any, List
 
 import aim
 import cv2
@@ -13,10 +14,9 @@ from pytorch_lightning import LightningModule
 from torchvision.io import write_video
 
 import src.models.functions.loss as loss_fn
-import src.models.functions.scheduler as lr_scheduler
 import src.models.functions.optimizer as custom_optimizer
+import src.models.functions.scheduler as lr_scheduler
 from src.utils import visualize
-from pathlib import Path
 
 
 class DMANetLitModule(LightningModule):
@@ -199,11 +199,10 @@ class DMANetLitModule(LightningModule):
 
             image = (image * 255).astype(np.uint8).transpose((1, 2, 0))
             mask = visualize.show_prediction(image, target, overlay=0.4)
-            mask = cv2.resize(mask, (1920,1080), interpolation = cv2.INTER_CUBIC)
+            mask = cv2.resize(mask, (1920, 1080), interpolation=cv2.INTER_CUBIC)
             colored_masks.append(mask)
 
         return colored_masks
-
 
     def on_predict_epoch_end(self, outputs: List[Any]):
         outputs = np.concatenate(outputs, axis=0).astype(np.uint8)
@@ -230,7 +229,10 @@ class DMANetLitModule(LightningModule):
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
         if self.hparams.optimizer_type.lower() not in ['sgd', 'adam']:
-            raise ValueError("Optimizer type must between Adam or SGD")
+            raise ValueError('Optimizer type must between Adam or SGD')
+
+        if self.hparams.auto_lr and self.hparams.lr < 0.1:
+            raise ValueError('LR must bigger than 0.1 if using Auto LR')
 
         optimizer = None
         if self.hparams.optimizer_type.lower() == 'sgd':
@@ -256,20 +258,20 @@ class DMANetLitModule(LightningModule):
                 weight_decay=self.hparams.weight_decay,
             )
 
-        if self.hparams.auto_lr and self.hparams.lr < 1.0:
-            raise ValueError("LR must be 1.0 if using Auto LR")
-
+        max_steps = self.trainer.estimated_stepping_batches
+        if self.trainer.max_steps != -1:
+            max_steps = self.trainer.max_steps
         scheduler = lr_scheduler.PolynomialLR(
             optimizer,
-            total_iters=self.trainer.max_steps,
+            total_iters=max_steps,
             power=self.hparams.lr_power
         )
 
         return {
             'optimizer': optimizer,
             'lr_scheduler': {
-                "scheduler": scheduler,
-                "interval": "step",
-                "name": None,
+                'scheduler': scheduler,
+                'interval': 'step',
+                'name': None,
             }
         }
