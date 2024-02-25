@@ -1,0 +1,60 @@
+[tool.poetry]
+name = "pytorch-dmanet"
+version = "1.0.0"
+description = "Implementation of Deep Multi-branch Aggregation Network for Real-Time Semantic Segmentation in Street Scenes"
+authors = ["Haritsahm <m.haritsah@mail.ugm.ac.id>"]
+license = "Apache 2.0"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.12"
+aim = "^3.18.1"
+albumentations = "<4.9"
+av = "^11.0.0"
+deeplake = "^3.8.21"
+fiftyone = "^0.23.5"
+huggingface-hub = "^0.20.3"
+hydra-colorlog = "^1.2.0"
+hydra-core = "^1.3.2"
+hydra-optuna-sweeper = "^1.2.0"
+lightning = "^2.2.0.post0"
+neptune = "^1.9.1"
+opencv-python = "<4.7"
+opencv-python-headless = "<4.7"
+python-ffmpeg = "^2.0.10"
+pyyaml = "^6.0.1"
+rich = "^13.7.0"
+safetensors = "^0.4.2"
+timm = "^0.9.16"
+torch = ">2.1.0"
+torchinfo = "^1.8.0"
+torchmetrics = "^1.3.1"
+torchvision = "^0.17.1"
+wandb = "^0.16.3"
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.6.2"
+autopep8 = "^2.0.4"
+isort = "<5.13.0"
+flake8 = "^7.0.0"
+nbstripout = "^0.7.1"
+python-dotenv = "^1.0.1"
+pytest = "^8.0.2"
+pudb = "^2024.1"
+sh = "^2.0.6"
+
+[tool.isort]
+line_length = 110
+profile = "black"
+filter_files = "True"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+log_cli = "True"
+markers = "slow"
+addopts = ["--durations=0", "--strict-markers", "--doctest-modules"]
+filterwarnings = ["ignore::DeprecationWarning", "ignore::UserWarning"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
