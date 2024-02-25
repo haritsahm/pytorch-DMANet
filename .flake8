@@ -1,0 +1,11 @@
+[flake8]
+max_line_length = 110
+show_source = True
+format = pylint
+exclude =
+    .git
+    __pycache__
+    data/*
+    tests/*
+    notebooks/*
+    logs/*
