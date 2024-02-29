@@ -1,6 +1,6 @@
 import pytest
 
-from src.datamodules.components.hub_dataset import HubSegmentationDataset
+from src.datamodules.components.deeplake_dataset import DeepLakeSegmentationDataset
 
 
 @pytest.mark.parametrize('data_dir,stage,num_data', [
@@ -9,6 +9,6 @@ from src.datamodules.components.hub_dataset import HubSegmentationDataset
     ('hub://haritsahm/camvid_train', 'test', 232)
 ])
 def test_load_dataset(data_dir, stage, num_data) -> None:
-    ds = HubSegmentationDataset(data_dir, stage)
+    ds = DeepLakeSegmentationDataset(data_dir, stage)
 
     assert len(ds) == num_data

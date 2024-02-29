@@ -15,7 +15,7 @@ from src.datamodules.dmanet_datamodule import DMANetDataModule
 
 def configs():
     return [{
-        'data_dir': '/media/haritsahm/DataStorage/dataset/cityscapes/cityscape_fo_segmentation',
+        'data_dir': 'data/cityscape_fo_segmentation',
         'dataloader': 'src.datamodules.components.fiftyone_dataset.ImageSegmentationDirectory',
         'num_classes': 19,
         'image_size': [768, 1536],
@@ -61,7 +61,7 @@ def test_dmanet_datamodule(config):
 
 @pytest.mark.parametrize('config', configs())
 def test_dmanet_video_datamodule(config):
-    config['data_dir'] = '/media/haritsahm/DataStorage/dataset/samples/videos/Driving_in_BRISTOL_England_City_Center.mp4'
+    config['data_dir'] = 'samples/videos/Driving_in_BRISTOL_England_City_Center.mp4'
     config['dataloader'] = 'src.datamodules.components.streams.VideoReader'
     datamodule = DMANetDataModule(**config)
 
