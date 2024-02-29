@@ -1,8 +1,10 @@
+import os
+import sys
 from typing import Any, Dict, List, Optional, Tuple
 
 import hydra
 import lightning as L
-import rootutils
+from dotenv import load_dotenv
 from lightning import Callback, LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig
@@ -17,24 +19,11 @@ from src.utils import (
     task_wrapper,
 )
 
-rootutils.setup_root(__file__, indicator='.project-root', pythonpath=True)
-# ------------------------------------------------------------------------------------ #
-# the setup_root above is equivalent to:
-# - adding project root dir to PYTHONPATH
-#       (so you don't need to force user to install project as a package)
-#       (necessary before importing any local modules e.g. `from src import utils`)
-# - setting up PROJECT_ROOT environment variable
-#       (which is used as a base for paths in "configs/paths/default.yaml")
-#       (this way all filepaths are the same no matter where you run the code)
-# - loading environment variables from ".env" in root dir
-#
-# you can remove it if you:
-# 1. either install project as a package or move entry files to project root dir
-# 2. set `root_dir` to "." in "configs/paths/default.yaml"
-#
-# more info: https://github.com/ashleve/rootutils
-# ------------------------------------------------------------------------------------ #
+currentdir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.dirname(currentdir))
 
+
+load_dotenv('../.env')
 
 log = RankedLogger(__name__, rank_zero_only=True)
 
@@ -64,8 +53,8 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     log.info('Instantiating loggers...')
     logger: List[Logger] = instantiate_loggers(cfg.get('logger'))
 
-    log.info(f'Instantiating datamodule <{cfg.data._target_}>')
-    datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data)
+    log.info(f'Instantiating datamodule <{cfg.datamodule._target_}>')
+    datamodule: LightningDataModule = hydra.utils.instantiate(cfg.datamodule)
 
     log.info(f'Instantiating model <{cfg.model._target_}>')
     model: LightningModule = hydra.utils.instantiate(cfg.model)
