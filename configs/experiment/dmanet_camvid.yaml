@@ -18,7 +18,8 @@ name: "dmanet_camvid"
 
 seed: 43
 
-data_dir: data/camvid_train
+paths:
+  data_dir: data/camvid_train/
 
 trainer:
   devices: 1

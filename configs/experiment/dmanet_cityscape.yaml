@@ -18,6 +18,9 @@ name: "dmanet_cityscape"
 
 seed: 43
 
+paths:
+  data_dir: data/camvid_train/
+
 trainer:
   devices: 1
   min_epochs: 1
