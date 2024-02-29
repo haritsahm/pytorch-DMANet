@@ -4,8 +4,8 @@
 # python train.py experiment=example
 
 defaults:
-  - override /datamodule: mnist.yaml
-  - override /model: mnist.yaml
+  - override /datamodule: dmanet_dl_camvid.yaml
+  - override /model: dmanet.yaml
   - override /callbacks: default.yaml
   - override /logger: null
   - override /trainer: default.yaml
@@ -14,25 +14,30 @@ defaults:
 # this allows you to overwrite only specified parameters
 
 # name of the run determines folder name in logs
-name: "simple_dense_net"
+name: "dmanet_camvid"
 
-seed: 12345
+seed: 43
+
+data_dir: data/camvid_train
 
 trainer:
-  min_epochs: 10
-  max_epochs: 10
+  devices: 1
+  min_epochs: 1
+  max_epochs: 100
   gradient_clip_val: 0.5
+  max_steps: 60000
 
 model:
-  lr: 0.002
+  lr: 0.001
+  aux_weight: 1.0
+  warmup_iters: 2500
+  criterion_type: ohem_crossentropy
   net:
-    lin1_size: 128
-    lin2_size: 256
-    lin3_size: 64
+    _target_: src.models.components.dma_net.DMANet
+    num_classes: 32
 
 datamodule:
-  batch_size: 64
-
-logger:
-  wandb:
-    tags: ["mnist", "${name}"]
+  num_classes: ${model.net.num_classes}
+  batch_size: 4
+  image_size: [640, 640]
+  num_workers: 4

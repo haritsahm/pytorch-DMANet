@@ -4,11 +4,11 @@
 # python train.py experiment=example
 
 defaults:
-  - override /datamodule: dmanet.yaml
-  - override /model: dmanet.yaml
-  - override /callbacks: default.yaml
+  - override /datamodule: dmanet_fo_cityscape
+  - override /model: dmanet
+  - override /callbacks: default
   - override /logger: null
-  - override /trainer: default.yaml
+  - override /trainer: default
 
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters

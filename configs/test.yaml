@@ -1,32 +1,18 @@
 # @package _global_
 
-# specify here default evaluation configuration
 defaults:
   - _self_
-  - datamodule: dmanet.yaml # choose the datamodule for evaluation
-  - model: dmanet.yaml
-  - callbacks: null
+  - datamodule: dmanet_fo_cityscape # choose datamodule with `test_dataloader()` for evaluation
+  - model: dmanet
   - logger: null
-  - trainer: default.yaml
-  - log_dir: evaluation.yaml
+  - trainer: default
+  - paths: default
+  - extras: default
+  - hydra: default
 
-  - experiment: null
+task_name: "eval"
 
-  # enable color logging
-  - override hydra/hydra_logging: colorlog
-  - override hydra/job_logging: colorlog
+tags: ["dev"]
 
-original_work_dir: ${hydra:runtime.cwd}
-
-data_dir: ${original_work_dir}/data/
-
-print_config: True
-
-ignore_warnings: True
-
-seed: null
-
-name: "default"
-
-# passing checkpoint path is necessary
+# passing checkpoint path is necessary for evaluation
 ckpt_path: ???
