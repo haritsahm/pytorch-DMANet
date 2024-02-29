@@ -8,11 +8,10 @@ from lightning import LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig
 
+currentdir = os.path.dirname(os.path.realpath(__file__))   # nosec B703, B308
+sys.path.append(os.path.dirname(currentdir))   # nosec B703, B308
+
 from src.utils import RankedLogger, extras, instantiate_loggers, log_hyperparameters, task_wrapper
-
-currentdir = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(os.path.dirname(currentdir))
-
 
 load_dotenv('../.env')
 
