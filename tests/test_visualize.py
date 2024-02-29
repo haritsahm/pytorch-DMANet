@@ -9,10 +9,10 @@ from src.datamodules.dmanet_datamodule import DMANetDataModule
 @pytest.fixture
 def config():
     return {
-        'data_dir': 'data/cityscape_fo_segmentation',
+        'data_dir': '/media/haritsahm/DataStorage/dataset/cityscapes/cityscape_fo_segmentation',
         'dataloader': 'src.datamodules.components.fiftyone_dataset.ImageSegmentationDirectory',
         'num_classes': 19,
-        'image_size': [640, 640],
+        'iamge_size': [640, 640],
         'train_transform': None,
         'test_transform': None,
         'batch_size': 4,
