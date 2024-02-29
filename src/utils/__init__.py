@@ -2,11 +2,13 @@ import logging
 import warnings
 from typing import List, Sequence
 
-import pytorch_lightning as pl
+import lightning as pl
 import rich.syntax
 import rich.tree
+from lightning.pytorch.callbacks import Callback
+from lightning.pytorch.loggers import Logger, NeptuneLogger, WandbLogger
+from lightning.pytorch.utilities import rank_zero_only
 from omegaconf import DictConfig, OmegaConf
-from pytorch_lightning.utilities import rank_zero_only
 
 
 def get_logger(name=__name__) -> logging.Logger:
@@ -107,8 +109,8 @@ def log_hyperparameters(
     model: pl.LightningModule,
     datamodule: pl.LightningDataModule,
     trainer: pl.Trainer,
-    callbacks: List[pl.Callback],
-    logger: List[pl.loggers.LightningLoggerBase],
+    callbacks: List[Callback],
+    logger: List[Logger],
 ) -> None:
     """Controls which config parts are saved by Lightning loggers.
 
@@ -148,18 +150,18 @@ def finish(
     model: pl.LightningModule,
     datamodule: pl.LightningDataModule,
     trainer: pl.Trainer,
-    callbacks: List[pl.Callback],
-    logger: List[pl.loggers.LightningLoggerBase],
+    callbacks: List[Callback],
+    loggers: List[Logger],
 ) -> None:
     """Makes sure everything closed properly."""
 
     # without this sweeps with wandb logger might crash!
-    for lg in logger:
-        if isinstance(lg, pl.loggers.wandb.WandbLogger):
+    for logger in loggers:
+        if isinstance(logger, WandbLogger):
             import wandb
 
             wandb.finish()
 
-        if isinstance(lg, pl.loggers.NeptuneLogger):
-            lg.experiment['checkpoints/best_model'].upload(trainer.checkpoint_callback.best_model_path)
-            lg.experiment['checkpoints/best_model_path'].log(trainer.checkpoint_callback.best_model_path)
+        if isinstance(logger, NeptuneLogger):
+            logger.experiment['checkpoints/best_model'].upload(trainer.checkpoint_callback.best_model_path)
+            logger.experiment['checkpoints/best_model_path'].log(trainer.checkpoint_callback.best_model_path)

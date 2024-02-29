@@ -62,10 +62,10 @@ Run and follow the [notebook](notebooks/dataset-preparation.ipynb) to prepare an
 ### 1. Train with default configurations
 ```bash
 # train on CPU
-python train.py trainer.gpus=0 data_dir=data/datasets/cityscapes/cityscape_fo_image_segmentation
+python train.py trainer.accelerator=cpu data_dir=data/datasets/cityscapes/cityscape_fo_image_segmentation
 
 # train on GPU
-python train.py trainer.gpus=1 data_dir=data/datasets/cityscapes/cityscape_fo_image_segmentation
+python train.py trainer.accelerator=gpu data_dir=data/datasets/cityscapes/cityscape_fo_image_segmentation
 ```
 
 ### 2. Train model with chosen experiment configuration from [configs/experiment/](configs/experiment/)
@@ -76,7 +76,7 @@ python train.py experiment=cityscape data_dir=data/datasets/cityscapes/cityscape
 
 ### 3. Train using pretrained weights
 ```bash
-python train.py data_dir=data/datasets/cityscapes/cityscape_fo_image_segmentation +load_from_checkpoint=path/to/checkpoint.ckpt
+python train.py data_dir=data/datasets/cityscapes/cityscape_fo_image_segmentation ckpt_path=path/to/checkpoint.ckpt
 ```
 
 ### 4. Track experiments with experiment trackers

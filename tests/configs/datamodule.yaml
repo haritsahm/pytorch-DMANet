@@ -1,6 +1,6 @@
 _target_: src.datamodules.dmanet_datamodule.DMANetDataModule
 
-data_dir: "/media/haritsahm/DataStorage/dataset/cityscapes/cityscape_fo_segmentation"
+data_dir: "data/cityscape_fo_segmentation"
 dataloader: src.datamodules.components.fiftyone_dataset.ImageSegmentationDirectory
 num_classes: 19
 image_size: [768, 1536]

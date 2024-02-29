@@ -19,7 +19,7 @@ name: "dmanet_cityscape"
 seed: 43
 
 trainer:
-  gpus: 1
+  devices: 1
   min_epochs: 1
   max_epochs: 100
   gradient_clip_val: 0.5

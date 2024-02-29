@@ -3,7 +3,7 @@ from typing import List, Optional
 import albumentations as Albu
 import hydra
 from albumentations.pytorch import ToTensorV2
-from pytorch_lightning import LightningDataModule
+from lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
 
 
@@ -118,7 +118,7 @@ class DMANetDataModule(LightningDataModule):
                     stage='train', transform=self._train_transform)
                 if len(self._data_train) == 0:
                     raise ValueError('Train dataset is empty.')
-            if stage in ['validation', 'test', 'fit', None]:
+            if stage in ['validate', 'test', 'fit', None]:
                 self._data_val = hydra.utils.instantiate(
                     self._loader_cls['dataloader'], dataset_dir=self.hparams.data_dir,
                     stage='validation', transform=self._test_transform)

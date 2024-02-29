@@ -2,9 +2,9 @@ import os
 from typing import List
 
 import hydra
+from lightning import LightningDataModule, LightningModule, Trainer, seed_everything
+from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig
-from pytorch_lightning import LightningDataModule, LightningModule, Trainer, seed_everything
-from pytorch_lightning.loggers import LightningLoggerBase
 
 from src import utils
 
@@ -38,7 +38,7 @@ def test(config: DictConfig) -> None:
     model: LightningModule = hydra.utils.instantiate(config.model)
 
     # Init lightning loggers
-    logger: List[LightningLoggerBase] = []
+    logger: List[Logger] = []
     if 'logger' in config:
         for _, lg_conf in config.logger.items():
             if '_target_' in lg_conf:

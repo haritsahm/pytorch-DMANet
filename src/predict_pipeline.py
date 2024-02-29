@@ -2,9 +2,9 @@ import os
 from typing import List
 
 import hydra
+from lightning import LightningDataModule, LightningModule, Trainer, seed_everything
+from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig
-from pytorch_lightning import LightningDataModule, LightningModule, Trainer, seed_everything
-from pytorch_lightning.loggers import LightningLoggerBase
 
 from src import utils
 
@@ -32,7 +32,6 @@ def predict(config: DictConfig) -> None:
     if not os.path.isabs(config.data_dir):
         config.data_dir = os.path.join(hydra.utils.get_original_cwd(), config.data_dir)
 
-
     # Init lightning datamodule
     log.info(f'Instantiating datamodule <{config.datamodule._target_}>')
     datamodule: LightningDataModule = hydra.utils.instantiate(config.datamodule)
@@ -42,7 +41,7 @@ def predict(config: DictConfig) -> None:
     model: LightningModule = hydra.utils.instantiate(config.model)
 
     # Init lightning loggers
-    logger: List[LightningLoggerBase] = []
+    logger: List[Logger] = []
     if 'logger' in config:
         for _, lg_conf in config.logger.items():
             if '_target_' in lg_conf:

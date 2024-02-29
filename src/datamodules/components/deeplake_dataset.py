@@ -2,13 +2,13 @@ from typing import Optional, Tuple
 
 import albumentations as Albu
 import cv2
-import hub
+import deeplake
 import numpy as np
 import torch
 from torch.utils.data import Dataset
 
 
-class HubSegmentationDataset(Dataset):
+class DeepLakeSegmentationDataset(Dataset):
 
     def __init__(self, dataset_dir: str, stage: str = 'train', transform: Optional[Albu.Compose] = None):
         for split in ['train', 'val', 'test']:
@@ -19,7 +19,7 @@ class HubSegmentationDataset(Dataset):
                     pass
                 else:
                     dataset_dir = dataset_dir.replace(split, stage)
-        self._ds = hub.load(dataset_dir, read_only=True)
+        self._ds = deeplake.load(dataset_dir, read_only=True)
         self._transform = transform
 
     def __len__(self) -> int:

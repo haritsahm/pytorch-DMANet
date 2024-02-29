@@ -18,10 +18,10 @@ name: "dmanet_camvid"
 
 seed: 43
 
-data_dir: hub://haritsahm/camvid_train
+data_dir: data/camvid_train
 
 trainer:
-  gpus: 1
+  devices: 1
   min_epochs: 1
   max_epochs: 100
   gradient_clip_val: 0.5
@@ -37,7 +37,7 @@ model:
     num_classes: 32
 
 datamodule:
-  dataloader: src.datamodules.components.hub_dataset.HubSegmentationDataset
+  dataloader: src.datamodules.components.deeplake_dataset.DeepLakeSegmentationDataset
   num_classes: ${model.net.num_classes}
   batch_size: 4
   image_size: [640, 640]

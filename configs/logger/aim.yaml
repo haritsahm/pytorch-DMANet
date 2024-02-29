@@ -1,7 +1,7 @@
 # https://aimstack.io/
 
 aim:
-  _target_: aim.pytorch_lightning.AimLogger
+  _target_: aim.lightning.AimLogger
   experiment: ${name}
   train_metric_prefix: "train_"
   val_metric_prefix: "val_"

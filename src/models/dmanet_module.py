@@ -4,13 +4,13 @@ from typing import Any, List
 
 import aim
 import cv2
-import neptune.new as neptune
+import neptune
 import numpy as np
 import torch
 import torch.nn.functional as F
 import torchmetrics as tm
-from neptune.new.types import File
-from pytorch_lightning import LightningModule
+from lightning import LightningModule
+from neptune.types import File
 from torchvision.io import write_video
 
 import src.models.functions.loss as loss_fn
@@ -112,7 +112,7 @@ class DMANetLitModule(LightningModule):
         # we can return here dict with any tensors
         return {'loss': joint_loss}
 
-    def training_epoch_end(self, outputs: List[Any]):
+    def on_train_epoch_end(self, outputs: List[Any]):
         # `outputs` is a list of dicts returned from `training_step()`
         pass
 
@@ -146,7 +146,7 @@ class DMANetLitModule(LightningModule):
 
         return {'loss': loss}
 
-    def validation_epoch_end(self, outputs: List[Any]):
+    def on_validation_epoch_end(self, outputs: List[Any]):
         val_metrics = self._val_metrics.compute()
         # self.log('val/avg_loss', outputs["loss"], on_step=False, on_epoch=True, prog_bar=False)
         self.log('val/acc', val_metrics['Accuracy'], on_step=False, on_epoch=True, prog_bar=False)
@@ -177,7 +177,7 @@ class DMANetLitModule(LightningModule):
 
         # TODO: Save output to some standards JSON/txt
 
-    def test_epoch_end(self, outputs: List[Any]):
+    def on_test_epoch_end(self, outputs: List[Any]):
         pass
 
     def on_epoch_end(self):
