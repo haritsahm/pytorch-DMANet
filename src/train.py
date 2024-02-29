@@ -22,7 +22,7 @@ from src.utils import (
     task_wrapper,
 )
 
-load_dotenv('../.env')
+load_dotenv()
 
 log = RankedLogger(__name__, rank_zero_only=True)
 

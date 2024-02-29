@@ -13,7 +13,7 @@ sys.path.append(os.path.dirname(currentdir))   # nosec B703, B308
 
 from src.utils import RankedLogger, extras, instantiate_loggers, log_hyperparameters, task_wrapper
 
-load_dotenv('../.env')
+load_dotenv()
 
 log = RankedLogger(__name__, rank_zero_only=True)
 
