@@ -1,5 +1,5 @@
 defaults:
   - default
 
-accelerator: gpu
+accelerator: cpu
 devices: 1

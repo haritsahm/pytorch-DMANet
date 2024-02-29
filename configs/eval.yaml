@@ -1,0 +1,26 @@
+# @package _global_
+
+defaults:
+  - _self_
+  - datamodule: dmanet_fo_cityscape # choose datamodule with `test_dataloader()` for evaluation
+  - model: dmanet
+  - callbacks: default
+  - logger: null
+  - trainer: default
+  - paths: default
+  - extras: default
+  - hydra: default
+
+  # experiment configs allow for version control of specific hyperparameters
+  # e.g. best hyperparameters for given model and datamodule
+  - experiment: null
+
+  # debugging config (enable through command line, e.g. `python train.py debug=default)
+  - debug: null
+
+task_name: "eval"
+
+tags: ["dev"]
+
+# passing checkpoint path is necessary for evaluation
+ckpt_path: ???

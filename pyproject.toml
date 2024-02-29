@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pytorch-dmanet"
-version = "1.0.0"
+version = "1.1.0"
 description = "Implementation of Deep Multi-branch Aggregation Network for Real-Time Semantic Segmentation in Street Scenes"
 authors = ["Haritsahm <m.haritsah@mail.ugm.ac.id>"]
 license = "Apache 2.0"
