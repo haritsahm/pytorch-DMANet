@@ -165,19 +165,19 @@ python train.py +model.new_param="uwu"
 
 ```bash
 # train on CPU
-python train.py trainer.gpus=0
+python train.py trainer.accelerator=cpu
 
 # train on 1 GPU
-python train.py trainer.gpus=1
+python train.py trainer.accelerator=gpu
 
 # train on TPU
-python train.py +trainer.tpu_cores=8
+python train.py trainer.accelerator=tpu trainer.devices=8
 
 # train with DDP (Distributed Data Parallel) (4 GPUs)
-python train.py trainer.gpus=4 +trainer.strategy=ddp
+python train.py trainer.devices=4 +trainer.strategy=ddp
 
 # train with DDP (Distributed Data Parallel) (8 GPUs, 2 nodes)
-python train.py trainer.gpus=4 +trainer.num_nodes=2 +trainer.strategy=ddp
+python train.py trainer.devices=4 +trainer.num_nodes=2 +trainer.strategy=ddp
 ```
 
 </details>
@@ -187,7 +187,7 @@ python train.py trainer.gpus=4 +trainer.num_nodes=2 +trainer.strategy=ddp
 
 ```bash
 # train with pytorch native automatic mixed precision (AMP)
-python train.py trainer.gpus=1 +trainer.precision=16
+python train.py trainer.devices=1 +trainer.precision=16
 ```
 
 </details>
@@ -300,9 +300,6 @@ python train.py +trainer.overfit_batches=1 trainer.max_epochs=20
 # use only 20% of the data
 python train.py +trainer.limit_train_batches=0.2 \
 +trainer.limit_val_batches=0.2 +trainer.limit_test_batches=0.2
-
-# log second gradient norm of the model
-python train.py +trainer.track_grad_norm=2
 ```
 
 </details>
@@ -313,7 +310,7 @@ python train.py +trainer.track_grad_norm=2
 > Checkpoint can be either path or URL.
 
 ```yaml
-python train.py trainer.resume_from_checkpoint="/path/to/ckpt/name.ckpt"
+python train.py ckpt_path="/path/to/ckpt/name.ckpt"
 ```
 
 > ⚠️ Currently loading ckpt in Lightning doesn't resume logger experiment, but it will be supported in future Lightning release.
@@ -740,7 +737,7 @@ hydra:
 
 </details>
 
-Next, you can execute it with: `python train.py -m hparams_search=mnist_optuna`
+Next, you can execute it with: `python train.py -m hparams_search=dmanet_optuna`
 
 Using this approach doesn't require you to add any boilerplate into your pipeline, everything is defined in a single config file.
 
@@ -876,7 +873,7 @@ Lightning supports multiple ways of doing distributed training. The most common 
 You can run DDP on mnist example with 4 GPUs like this:
 
 ```bash
-python train.py trainer.gpus=4 +trainer.strategy=ddp
+python train.py trainer.devices=4 +trainer.strategy=ddp
 ```
 
 ⚠️ When using DDP you have to be careful how you write your models - learn more [here](https://pytorch-lightning.readthedocs.io/en/latest/advanced/multi_gpu.html).
@@ -1205,7 +1202,7 @@ The style guide is available [here](https://pytorch-lightning.readthedocs.io/en/
        def training_step_end():
            ...
 
-       def training_epoch_end():
+       def on_train_epoch_end():
            ...
 
        def validation_step():
@@ -1214,7 +1211,7 @@ The style guide is available [here](https://pytorch-lightning.readthedocs.io/en/
        def validation_step_end():
            ...
 
-       def validation_epoch_end():
+       def on_validation_epoch_end():
            ...
 
        def test_step():
@@ -1223,7 +1220,7 @@ The style guide is available [here](https://pytorch-lightning.readthedocs.io/en/
        def test_step_end():
            ...
 
-       def test_epoch_end():
+       def on_test_epoch_end():
            ...
 
        def configure_optimizers():
@@ -1430,10 +1427,10 @@ Train model with default configuration
 
 ```bash
 # train on CPU
-python train.py trainer.gpus=0
+python train.py trainer.accelerator=cpu trainer.devices=1
 
 # train on GPU
-python train.py trainer.gpus=1
+python train.py trainer.accelerator=gpu trainer.devices=1
 ```
 
 Train model with chosen experiment configuration from [configs/experiment/](configs/experiment/)
