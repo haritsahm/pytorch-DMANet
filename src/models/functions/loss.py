@@ -41,7 +41,7 @@ class FocalLoss2d(nn.Module):
 
 
 class OhemCrossEntropy2dTensor(nn.Module):
-    def __init__(self, ignore_label, reduction='elementwise_mean', thresh=0.6, min_kept=256,
+    def __init__(self, ignore_label, reduction='mean', thresh=0.6, min_kept=256,
                  down_ratio=1, use_weight=True, weight=None):
         super(OhemCrossEntropy2dTensor, self).__init__()
         self.ignore_label = ignore_label

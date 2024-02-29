@@ -22,7 +22,7 @@ from src.utils import visualize
 class DMANetLitModule(LightningModule):
     """LightningModule for DMA Network.
 
-    For full documentation of LightningModule, plese read the docs.
+    For full documentation of LightningModule, please read the docs.
     Source: https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html
 
     A LightningModule organizes your PyTorch code into 5 sections:
@@ -112,7 +112,7 @@ class DMANetLitModule(LightningModule):
         # we can return here dict with any tensors
         return {'loss': joint_loss}
 
-    def on_train_epoch_end(self, outputs: List[Any]):
+    def on_train_epoch_end(self):
         # `outputs` is a list of dicts returned from `training_step()`
         pass
 
@@ -146,7 +146,7 @@ class DMANetLitModule(LightningModule):
 
         return {'loss': loss}
 
-    def on_validation_epoch_end(self, outputs: List[Any]):
+    def on_validation_epoch_end(self):
         val_metrics = self._val_metrics.compute()
         # self.log('val/avg_loss', outputs["loss"], on_step=False, on_epoch=True, prog_bar=False)
         self.log('val/acc', val_metrics['Accuracy'], on_step=False, on_epoch=True, prog_bar=False)
@@ -177,7 +177,7 @@ class DMANetLitModule(LightningModule):
 
         # TODO: Save output to some standards JSON/txt
 
-    def on_test_epoch_end(self, outputs: List[Any]):
+    def on_test_epoch_end(self):
         pass
 
     def on_epoch_end(self):
@@ -225,8 +225,8 @@ class DMANetLitModule(LightningModule):
         """Choose what optimizers and learning-rate schedulers to use in your optimization. Normally
         you'd need one. But in the case of GANs or similar you might have multiple.
 
-        See examples here:
-            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
+        See examples here: https://pytorch-
+        lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
         if self.hparams.optimizer_type.lower() not in ['sgd', 'adam']:
             raise ValueError('Optimizer type must between Adam or SGD')
