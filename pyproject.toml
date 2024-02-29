@@ -21,6 +21,7 @@ lightning = "^2.2.0.post0"
 neptune = "^1.9.1"
 opencv-python = "<4.7"
 opencv-python-headless = "<4.7"
+python-dotenv = "^1.0.1"
 python-ffmpeg = "^2.0.10"
 pyyaml = "^6.0.1"
 rich = "^13.7.0"
@@ -33,20 +34,20 @@ torchvision = "0.17.0"
 wandb = "^0.16.3"
 
 [tool.poetry.group.dev.dependencies]
-pre-commit = "^3.6.2"
 autopep8 = "^2.0.4"
-isort = "<5.13.0"
 flake8 = "^7.0.0"
+isort = "<5.13.0"
 nbstripout = "^0.7.1"
-python-dotenv = "^1.0.1"
-pytest = "^8.0.2"
+pre-commit = "^3.6.2"
 pudb = "^2024.1"
+pytest = "^8.0.2"
+python-dotenv = "^1.0.1"
 sh = "^2.0.6"
 
 [tool.isort]
+filter_files = "True"
 line_length = 110
 profile = "black"
-filter_files = "True"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
