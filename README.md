@@ -19,20 +19,24 @@ This is an implementation of DMA-Net in Pytorch. The project is for my self expl
 1. **D-Adaptaion Optmizers**
    Learning rate free learning for SGD, AdaGrad and Adam! by [facebookresearch/dadaptation/](https://github.com/facebookresearch/dadaptation)
    Simlply enable by using:
+
    ```
    model.auto_lr=True model.lr=1.0
    ```
+
 2. **Hyperparameter Search**
    Since its hard to reproduce the result from the original author, I added 2 variables `high_level_features` and `low_level_features` to set the feature sizes in the model.
 
-    - **high_level_features**: its the CBR (upmid_cbr) input size after addition ops between sub-network 3 and sub-network 4 in the upscaling pipeline.
+   - **high_level_features**: its the CBR (upmid_cbr) input size after addition ops between sub-network 3 and sub-network 4 in the upscaling pipeline.
 
-    - **low_level_features**: its the CBR (uplow_cbr) input size after addition ops between sub-network 2 and upmid_cbr in the upscaling pipeline.
-    ```
-    model.net.low_level_features=128 model.net.high_level_features=128
-    ```
+   - **low_level_features**: its the CBR (uplow_cbr) input size after addition ops between sub-network 2 and upmid_cbr in the upscaling pipeline.
+
+   ```
+   model.net.low_level_features=128 model.net.high_level_features=128
+   ```
 
 # How to run
+
 ## Install dependencies
 
 ```bash
@@ -41,7 +45,7 @@ git clone https://github.com/haritsahm/pytorch-DMANet.git
 cd pytorch-DMANet
 
 # [OPTIONAL] create conda environment
-conda create -n myenv python=3.8
+conda create -n myenv python=3.10
 conda activate myenv
 
 # install pytorch according to instructions
@@ -56,47 +60,40 @@ pip install -r requirements.txt
 Run and follow the [notebook](notebooks/dataset-preparation.ipynb) to prepare and visualize dataset using Fiftyone
 ![Fiftyone Sample](docs/fiftyone-sample.png)
 
-
 ## Train Commands
 
 ### 1. Train with default configurations
+
 ```bash
 # train on CPU
-python train.py trainer.accelerator=cpu data_dir=data/datasets/cityscapes/cityscape_fo_image_segmentation
+python src/train.py trainer=cpu paths.data_dir=data/cityscape_fo_image_segmentation
 
 # train on GPU
-python train.py trainer.accelerator=gpu data_dir=data/datasets/cityscapes/cityscape_fo_image_segmentation
+python src/train.py trainer=gpu paths.data_dir=data/cityscape_fo_image_segmentation
+
+# train with DDP (Distributed Data Parallel) (4 GPUs)
+python src/train.py trainer=ddp trainer.devices=4 paths.data_dir=data/cityscape_fo_image_segmentation
 ```
 
 ### 2. Train model with chosen experiment configuration from [configs/experiment/](configs/experiment/)
 
 ```bash
-python train.py experiment=cityscape data_dir=data/datasets/cityscapes/cityscape_fo_image_segmentation
+# train using cityscape dataset
+python train.py experiment=dmanet_cityscape paths.data_dir=data/cityscape_fo_image_segmentation
+
+# train using camvid dataset
+python train.py experiment=dmanet_camvid
 ```
 
-### 3. Train using pretrained weights
-```bash
-python train.py data_dir=data/datasets/cityscapes/cityscape_fo_image_segmentation ckpt_path=path/to/checkpoint.ckpt
-```
-
-### 4. Track experiments with experiment trackers
-```bash
-python train.py data_dir=data/datasets/cityscapes/cityscape_fo_image_segmentation trainer.max_epochs=20 datamodule.batch_size=64 logger=neptune
-```
-
-### 5. Create a sweep over hyperparameters with Optuna
-```
-python train.py -m experiment=cityscape hparams_search=dmanet_optuna data_dir=data/datasets/cityscapes/cityscape_fo_image_segmentation
-```
-
-### 6. Override any parameter
+### 3. Override any parameter
 
 ```bash
-python train.py experiment=cityscape data_dir=data/datasets/cityscapes/cityscape_fo_image_segmentation trainer.max_epochs=20 datamodule.batch_size=64 model.net.low_level_features=128 model.net.high_level_features=256
+python train.py experiment=dmanet_cityscape paths.data_dir=data/cityscape_fo_image_segmentation trainer.max_epochs=20 datamodule.batch_size=64 model.net.low_level_features=128 model.net.high_level_features=256
 ```
 
 Read the full [documentation](docs/DOCS.md) on how to use pytorch-lightning + hydra
 
 ## TODO:
+
 - [ ] Train model using cloud instances
 - [ ] Validate and compare model metrics (cityscapes and camvid)
