@@ -1,7 +1,7 @@
 # https://wandb.ai
 
 wandb:
-  _target_: pytorch_lightning.loggers.wandb.WandbLogger
+  _target_: lightning.loggers.wandb.WandbLogger
   project: "template-tests"
   # name: ${name}
   save_dir: "."

@@ -2,9 +2,9 @@ import os
 from typing import List, Optional
 
 import hydra
+from lightning import Callback, LightningDataModule, LightningModule, Trainer, seed_everything
+from lightning.pytorch.loggers import Logger, NeptuneLogger
 from omegaconf import DictConfig, OmegaConf, open_dict
-from pytorch_lightning import Callback, LightningDataModule, LightningModule, Trainer, seed_everything
-from pytorch_lightning.loggers import LightningLoggerBase, NeptuneLogger
 
 from src import utils
 
@@ -27,9 +27,9 @@ def train(config: DictConfig) -> Optional[float]:
         seed_everything(config.seed, workers=True)
 
     # Convert relative ckpt path to absolute path if necessary
-    ckpt_path = config.trainer.get('resume_from_checkpoint')
+    ckpt_path = config.get('ckpt_path')
     if ckpt_path and not os.path.isabs(ckpt_path):
-        config.trainer.resume_from_checkpoint = os.path.join(
+        config.ckpt_path = os.path.join(
             hydra.utils.get_original_cwd(), ckpt_path
         )
 
@@ -38,7 +38,7 @@ def train(config: DictConfig) -> Optional[float]:
     datamodule: LightningDataModule = hydra.utils.instantiate(config.datamodule)
 
     # Convert relative ckpt path to absolute path if necessary
-    model_ckpt_path = config.get('load_from_checkpoint')
+    model_ckpt_path = config.get('ckpt_path')
     if model_ckpt_path and not os.path.isabs(model_ckpt_path):
         model_ckpt_path = os.path.join(
             hydra.utils.get_original_cwd(), model_ckpt_path
@@ -61,7 +61,7 @@ def train(config: DictConfig) -> Optional[float]:
                 callbacks.append(hydra.utils.instantiate(cb_conf))
 
     # Init lightning loggers
-    logger: List[LightningLoggerBase] = []
+    logger: List[Logger] = []
     if 'logger' in config:
         for _, lg_conf in config.logger.items():
             if '_target_' in lg_conf:

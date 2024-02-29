@@ -8,9 +8,9 @@ defaults:
 
 trainer:
   max_epochs: 1
-  gpus: 0 # debuggers don't like gpus
+  accelerator: cpu
+  devices: auto # debuggers don't like gpus
   detect_anomaly: true # raise exception if NaN or +/-inf is detected in any tensor
-  track_grad_norm: 2 # track gradient norm with loggers
 
 datamodule:
   num_workers: 0 # debuggers don't like multiprocessing
