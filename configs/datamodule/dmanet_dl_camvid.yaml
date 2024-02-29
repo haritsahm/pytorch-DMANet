@@ -1,11 +1,37 @@
-_target_: src.datamodules.dmanet_datamodule.DMANetDataModule
+defaults:
+  - dmanet_datamodule
 
-data_dir: ${paths.data_dir} # data_dir is specified in config.yaml
 dataloader: src.datamodules.components.deeplake_dataset.DeepLakeSegmentationDataset
-num_classes: 19
 image_size: [640, 640]
-train_transform: null
-test_transform: null
-batch_size: 16
-num_workers: 4
-pin_memory: False
+
+train_transform:
+  _target_: albumentations.Compose
+  transforms:
+    - _target_: albumentations.HorizontalFlip
+      p: 0.5
+    - _target_: albumentations.RandomScale
+      scale_limit: [-0.5, 1.0]
+      interpolation: 2
+    - _target_: albumentations.SmallestMaxSize
+      max_size: 960
+      interpolation: 2
+    - _target_: albumentations.RandomCrop
+      width: 640
+      height: 640
+    - _target_: albumentations.RandomBrightnessContrast
+      p: 0.2
+    - _target_: albumentations.Normalize
+      mean: [0.39068785, 0.40521392, 0.41434407]
+      std: [0.29652068, 0.30514979, 0.30080369]
+    - _target_: albumentations.pytorch.transforms.ToTensorV2
+
+test_transform:
+  _target_: albumentations.Compose
+  transforms:
+    - _target_: albumentations.Resize
+      width: 640
+      height: 640
+    - _target_: albumentations.Normalize
+      mean: [0.39068785, 0.40521392, 0.41434407]
+      std: [0.29652068, 0.30514979, 0.30080369]
+    - _target_: albumentations.pytorch.transforms.ToTensorV2

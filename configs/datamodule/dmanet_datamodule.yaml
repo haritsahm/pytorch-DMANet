@@ -1,0 +1,11 @@
+_target_: src.datamodules.dmanet_datamodule.DMANetDataModule
+
+data_dir: ${paths.data_dir} # data_dir is specified in config.yaml
+dataloader: src.datamodules.components.deeplake_dataset.DeepLakeSegmentationDataset
+num_classes: 19
+image_size: [640, 640]
+train_transform: null
+test_transform: null
+batch_size: 16
+num_workers: 4
+pin_memory: False
