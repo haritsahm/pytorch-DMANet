@@ -97,14 +97,14 @@ class MultiAggregationNetwork(nn.Module):
             self._input_size // 32), mode='bilinear', align_corners=True)
         features = features + high_features
         features = self._high_ftb(features)
-        high_aux = features
+        high_aux = features.clone()
 
         features = F.interpolate(features, size=tuple(
             self._input_size // 16), mode='bilinear', align_corners=True)
         features = features + mid_features
         features = self._upmid_cbr(features)
         features = self._mid_ftb(features)
-        mid_aux = features
+        mid_aux = features.clone()
 
         features = F.interpolate(features, size=tuple(
             self._input_size // 8), mode='bilinear', align_corners=True)

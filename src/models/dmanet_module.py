@@ -123,6 +123,7 @@ class DMANetLitModule(LightningModule):
         loss = self._criterion(logits, gt_masks)
 
         # log val metrics
+        logits = F.softmax(logits, dim=1)
         pd_masks = torch.argmax(logits, dim=1)
 
         self._val_metrics(pd_masks, gt_masks)
@@ -156,6 +157,7 @@ class DMANetLitModule(LightningModule):
     def test_step(self, batch: Any, batch_idx: int):
         images, logits, gt_masks = self.step(batch)
 
+        logits = F.softmax(logits, dim=1)
         pd_masks = torch.argmax(logits, dim=1)
 
         if batch_idx % 100 == 0:
@@ -188,6 +190,7 @@ class DMANetLitModule(LightningModule):
     def predict_step(self, batch: Any, batch_idx: int):
         images, logits, gt_masks = self.step(batch)
 
+        logits = F.softmax(logits, dim=1)
         pd_masks = torch.argmax(logits, dim=1)
 
         images = images.cpu().numpy()
