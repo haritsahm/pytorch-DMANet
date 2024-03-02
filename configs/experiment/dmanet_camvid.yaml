@@ -4,11 +4,11 @@
 # python train.py experiment=example
 
 defaults:
-  - override /datamodule: dmanet_dl_camvid.yaml
-  - override /model: dmanet.yaml
-  - override /callbacks: default.yaml
+  - override /datamodule: dmanet_dl_camvid
+  - override /model: dmanet
+  - override /callbacks: default
   - override /logger: null
-  - override /trainer: default.yaml
+  - override /trainer: default
 
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
@@ -24,21 +24,25 @@ paths:
 trainer:
   devices: 1
   min_epochs: 1
-  max_epochs: 100
+  max_epochs: 1000
   gradient_clip_val: 0.5
   max_steps: 60000
 
 model:
-  lr: 0.001
+  auto_lr: True
+  lr: 0.1
+  weight_decay: 0
   aux_weight: 1.0
   warmup_iters: 2500
+  optimizer_type: adam
   criterion_type: ohem_crossentropy
   net:
     _target_: src.models.components.dma_net.DMANet
+    high_level_features: 256
     num_classes: 32
 
 datamodule:
   num_classes: ${model.net.num_classes}
-  batch_size: 4
+  batch_size: 8
   image_size: [640, 640]
   num_workers: 4
