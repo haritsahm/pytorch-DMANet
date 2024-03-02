@@ -21,8 +21,8 @@ train_transform:
     - _target_: albumentations.RandomBrightnessContrast
       p: 0.2
     - _target_: albumentations.Normalize
-      mean: [0.39068785, 0.40521392, 0.41434407]
-      std: [0.29652068, 0.30514979, 0.30080369]
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
     - _target_: albumentations.pytorch.transforms.ToTensorV2
 
 test_transform:
@@ -32,6 +32,6 @@ test_transform:
       width: 640
       height: 640
     - _target_: albumentations.Normalize
-      mean: [0.39068785, 0.40521392, 0.41434407]
-      std: [0.29652068, 0.30514979, 0.30080369]
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
     - _target_: albumentations.pytorch.transforms.ToTensorV2
